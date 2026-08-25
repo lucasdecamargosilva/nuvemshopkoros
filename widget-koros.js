@@ -1108,6 +1108,7 @@
         function _qInlineClick(e) {
             e.preventDefault();
             e.stopPropagation();
+            window.__plBtnSrc = 'carrinho';
             const prodName = document.querySelector('h1.product__title,.product-single__title,h1')?.innerText || document.title;
             applyProduct(detectProduct(prodName));
             populateImageSelector();
@@ -1425,6 +1426,7 @@
                 e.preventDefault();
                 e.stopPropagation();
             }
+            window.__plBtnSrc = 'selo';
             const prodName = document.querySelector('h1.product__title,.product-single__title,h1')?.innerText || document.title;
             applyProduct(detectProduct(prodName));
             populateImageSelector();
