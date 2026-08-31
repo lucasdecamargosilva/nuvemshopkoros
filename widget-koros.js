@@ -3256,11 +3256,16 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
     function inserirBotaoProduto() {
         // So o botao do FORM do produto. O seletor largo casava 12 elementos nesta loja
         // (cards de "Veja tambem" tambem usam .btn-add-to-cart) e criaria 12 botoes.
+        // UM botao por pagina. A guarda antiga olhava so o pai do botao de compra — mas
+        // desde que o botao passou a ser ancorado no PROVADOR (outro pai) ela nunca mais
+        // enxergava o que ja existia, e o intervalo de retentativa criava um a cada volta:
+        // apareceram 3 na barra fixa que surge ao rolar a pagina.
+        if (document.querySelector('.q-btn-lentes-produto')) return true;
         var form = document.getElementById('product_form') || document.querySelector('form.js-product-form');
         var buys = form ? form.querySelectorAll('.js-addtocart, .btn-add-to-cart, [data-component="product.add-to-cart"]') : [];
         var achou = false;
         [].slice.call(buys).forEach(function (buy) {
-            if (!buy.parentNode || buy.parentNode.querySelector('.q-btn-lentes-produto')) return;
+            if (!buy.parentNode || achou) return;
             achou = true;
             var b = document.createElement('button');
             b.type = 'button';
@@ -3290,8 +3295,10 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         // Reancora algumas vezes para o ESCOLHER LENTES nao ficar acima dele.
         [600, 1800, 4000].forEach(function (ms) {
             setTimeout(function () {
+                var todos = document.querySelectorAll('.q-btn-lentes-produto');
+                for (var i = 1; i < todos.length; i++) todos[i].remove();   // sobrou duplicata: limpa
                 var inline = document.querySelector('.q-btn-inline-provador-real, .q-btn-inline-provador');
-                var lentes = document.querySelector('.q-btn-lentes-produto');
+                var lentes = todos[0];
                 if (inline && lentes && inline.nextSibling !== lentes && inline.parentNode) {
                     inline.parentNode.insertBefore(lentes, inline.nextSibling);
                 }
