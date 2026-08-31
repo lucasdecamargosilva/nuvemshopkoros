@@ -1,3 +1,36 @@
+/* ==========================================================================
+   Botao de compra REAL do produto (helper compartilhado)
+
+   A Nuvemshop renderiza mais de um "Comprar" na pagina do produto:
+   1) o do #product_form (o real);
+   2) o da barra FIXA que aparece ao rolar (.js-scroll-to-form) — que no mobile
+      vem ANTES no DOM e casa com os mesmos seletores;
+   3) os cards de "Veja tambem".
+   Ancorar nos itens 2/3 fazia os botoes do widget aparecerem dentro da barra
+   fixa e duplicados. Aqui devolvemos apenas o botao real.
+   ========================================================================== */
+window.__qKorosBuyBtn = function () {
+    var form = document.getElementById('product_form') || document.querySelector('form.js-product-form');
+    var sel = '[data-component="product.add-to-cart"], .js-addtocart, .btn-add-to-cart';
+    var buys = [].slice.call((form || document).querySelectorAll(sel));
+    buys = buys.filter(function (b) {
+        if (b.classList.contains('js-scroll-to-form')) return false;
+        if (b.closest('.js-item-product, .js-product-item, .item-product, .js-product-table-item')) return false;
+        // barra fixa / sticky: qualquer ancestral posicionado fora do fluxo
+        for (var el = b; el && el !== document.body; el = el.parentElement) {
+            var pos = '';
+            try { pos = getComputedStyle(el).position; } catch (_) { }
+            if (pos === 'fixed' || pos === 'sticky') return false;
+        }
+        return true;
+    });
+    return buys.length ? buys[buys.length - 1] : null;
+};
+window.__qKorosBuyRow = function () {
+    var b = window.__qKorosBuyBtn();
+    return b ? (b.closest('.form-row') || b) : null;
+};
+
 (function () {
     function isValidBRPhone(nums) {
         function setErr(msg) {
@@ -1364,8 +1397,7 @@
         // O form da Nuvemshop pode renderizar async → tenta em loop até o comprar existir.
         function _qPlaceInline() {
             if (inlineBtn.isConnected) return true;
-            var buyBtn = document.querySelector('.js-addtocart, .btn-add-to-cart, [data-component="product.add-to-cart"]');
-            var buyRow = buyBtn ? (buyBtn.closest('.form-row') || buyBtn) : null;
+            var buyRow = window.__qKorosBuyRow();
             if (buyRow && buyRow.parentNode) { buyRow.parentNode.insertBefore(inlineBtn, buyRow.nextSibling); return true; }
             var variantsContainer = document.querySelector('.js-product-variants');
             if (variantsContainer && variantsContainer.parentNode) {
@@ -1374,30 +1406,10 @@
             return false;
         }
 
-        // A Nuvemshop tem um 2º "Comprar" (.js-scroll-to-form, barra fixa que aparece
-        // ao rolar a página) que também casa com ".btn-add-to-cart" e vem ANTES do
-        // botão real no DOM — por isso o botão acima só aparecia nele. Aqui garantimos
-        // um 2º botão inline, clonado, ancorado especificamente no botão REAL do
-        // #product_form (data-component="product.add-to-cart"), do mesmo tamanho dele.
-        function _qPlaceInlineReal() {
-            var realBtn = document.querySelector('#product_form [data-component="product.add-to-cart"], #product_form .js-addtocart:not(.js-scroll-to-form)');
-            if (!realBtn) return false;
-            var realRow = realBtn.closest('.form-row') || realBtn;
-            if (!realRow.parentNode) return false;
-            if (document.querySelector('.q-btn-inline-provador-real')) return true;
-            var inlineBtn2 = inlineBtn.cloneNode(true);
-            inlineBtn2.classList.add('q-btn-inline-provador-real');
-            inlineBtn2.addEventListener('click', _qInlineClick);
-            realRow.parentNode.insertBefore(inlineBtn2, realRow.nextSibling);
-            return true;
-        }
-        if (!_qPlaceInlineReal()) {
-            var _qTries2 = 0;
-            var _qIv2 = setInterval(function () {
-                _qTries2++;
-                if (_qPlaceInlineReal() || _qTries2 > 40) clearInterval(_qIv2);
-            }, 250);
-        }
+        // Antes existia um 2º botão inline clonado ("...-provador-real") porque o
+        // seletor antigo casava com o "Comprar" da barra fixa (.js-scroll-to-form).
+        // Com __qKorosBuyRow() só existe uma âncora — o botão real — então um único
+        // botão basta e o clone só duplicava a UI na barra fixa.
 
         if (!_qPlaceInline()) {
             var _qTries = 0;
@@ -3253,49 +3265,35 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         track('abriu', { origem: 'botao_produto' });
         ir('q-step-lentes');
     }
-    // Botao de compra REAL do produto. A Nuvemshop tem um 2o "Comprar"
-    // (.js-scroll-to-form, barra fixa que aparece ao rolar) que tambem casa com
-    // ".btn-add-to-cart" — esse fica de fora. Os cards de "Veja tambem" tambem usam
-    // .btn-add-to-cart, entao a busca e' restrita ao form do produto; so quando o
-    // form nao existe (temas mobile que montam a compra fora do #product_form)
-    // caimos para a busca no documento.
-    function _qBotoesDeCompra() {
-        var form = document.getElementById('product_form') || document.querySelector('form.js-product-form');
-        var sel = '[data-component="product.add-to-cart"], .js-addtocart, .btn-add-to-cart';
-        var buys = [].slice.call((form || document).querySelectorAll(sel));
-        buys = buys.filter(function (b) { return !b.classList.contains('js-scroll-to-form') && !b.closest('.js-item-product, .js-product-item, .item-product'); });
-        return form ? buys : buys.slice(0, 1);
-    }
-
     function inserirBotaoProduto() {
-        var achou = false;
-        _qBotoesDeCompra().forEach(function (buy) {
-            var row = buy.closest('.form-row') || buy;
-            if (!row.parentNode) return;
-            achou = true;
-            if (row.previousElementSibling && row.previousElementSibling.classList.contains('q-btn-lentes-produto')) return;
-            if (row.parentNode.querySelector('.q-btn-lentes-produto')) return;
-            var b = document.createElement('button');
+        var row = window.__qKorosBuyRow();
+        if (!row || !row.parentNode) return false;
+        // limpa qualquer copia que tenha sobrado de uma renderizacao anterior do tema
+        [].slice.call(document.querySelectorAll('.q-btn-lentes-produto')).forEach(function (el) {
+            if (el.parentNode !== row.parentNode) el.remove();
+        });
+        var b = row.parentNode.querySelector('.q-btn-lentes-produto');
+        if (!b) {
+            b = document.createElement('button');
             b.type = 'button';
             b.className = 'q-btn-lentes-produto';
             b.textContent = 'ESCOLHER LENTES E COMPRAR';
             b.addEventListener('click', abrirFluxoDoProduto);
-            // Ordem pedida (31/08/2026): ESCOLHER LENTES E COMPRAR > COMPRAR > PROVADOR.
-            row.parentNode.insertBefore(b, row);
-        });
-        return achou;
+        }
+        // Ordem pedida (31/08/2026): ESCOLHER LENTES E COMPRAR > COMPRAR > PROVADOR.
+        if (row.previousElementSibling !== b) row.parentNode.insertBefore(b, row);
+        return true;
     }
 
     // Mantem a ordem mesmo se o tema re-renderizar a linha de compra.
     function _qReordenar() {
-        _qBotoesDeCompra().forEach(function (buy) {
-            var row = buy.closest('.form-row') || buy;
-            if (!row.parentNode) return;
-            var lentes = row.parentNode.querySelector('.q-btn-lentes-produto');
-            if (lentes && row.previousElementSibling !== lentes) row.parentNode.insertBefore(lentes, row);
-            var inline = row.parentNode.querySelector('.q-btn-inline-provador-real, .q-btn-inline-provador');
-            if (inline && row.nextSibling !== inline) row.parentNode.insertBefore(inline, row.nextSibling);
-        });
+        var row = window.__qKorosBuyRow();
+        if (!row || !row.parentNode) return;
+        inserirBotaoProduto();
+        var inlines = [].slice.call(document.querySelectorAll('.q-btn-inline-provador-real, .q-btn-inline-provador'));
+        var inline = inlines.filter(function (el) { return el.parentNode === row.parentNode; })[0] || inlines[0];
+        inlines.forEach(function (el) { if (el !== inline) el.remove(); });
+        if (inline && row.nextSibling !== inline) row.parentNode.insertBefore(inline, row.nextSibling);
     }
 
     /* ---------- init ---------- */
