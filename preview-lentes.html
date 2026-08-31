@@ -135,13 +135,15 @@ let S = { visao:null, trat:null, odEsf:0, odCil:0, oeEsf:0, oeCil:0, adicao:1.5 
 const pior = (a,b) => Math.abs(a) >= Math.abs(b) ? a : b;
 
 /* Uma lente serve se cobre o grau do pior olho, o tipo de visão e o tratamento. */
-function serve(l, esf, cil, add){
+function serve(l, esf, cil, add, ignoraTrat){
   if (l.semgrau) return false;
   if (l.visao !== S.visao) return false;
-  if (S.trat === 'ar'       && (l.blue || l.foto)) return false;
-  if (S.trat === 'blue'     && (!l.blue || l.foto)) return false;
-  if (S.trat === 'foto'     && (!l.foto || l.blue)) return false;
-  if (S.trat === 'fotoblue' && (!l.foto || !l.blue)) return false;
+  if (!ignoraTrat){
+    if (S.trat === 'ar'       && (l.blue || l.foto)) return false;
+    if (S.trat === 'blue'     && (!l.blue || l.foto)) return false;
+    if (S.trat === 'foto'     && (!l.foto || l.blue)) return false;
+    if (S.trat === 'fotoblue' && (!l.foto || !l.blue)) return false;
+  }
   if (esf < 0){ if (l.neg == null || esf < l.neg) return false; }
   if (esf > 0){ if (l.pos == null || esf > l.pos) return false; }
   if (cil < 0){ if (l.cil == null || cil < l.cil) return false; }
@@ -338,6 +340,18 @@ function telaGrau(){
   el('voltar').onclick = telaReceita;
 }
 
+
+/* O que essa lente entrega, em palavras do cliente. */
+function tratamentoDe(l){
+  const t = [];
+  if (l.ar) t.push('antirreflexo');
+  if (l.blue) t.push('filtro de luz azul');
+  if (l.foto) t.push('escurece no sol');
+  const campo = /top id/i.test(l.nome) ? 'super campo de visão'
+              : /light/i.test(l.nome)  ? 'campo de visão padrão' : '';
+  return [campo, t.join(' + ')].filter(Boolean).join(' · ');
+}
+
 /* ---- 5. resultado ---- */
 function cardHTML(l, porque){
   return `<div class="card-lente">
@@ -351,31 +365,49 @@ function cardHTML(l, porque){
 function telaResultado(){
   const esf = pior(S.odEsf, S.oeEsf), cil = pior(S.odCil, S.oeCil);
   const add = S.visao==='multifocal' ? S.adicao : null;
-  const servem = LENTES.filter(l=>serve(l,esf,cil,add)).sort((a,b)=>a.preco-b.preco);
+  const cabe   = LENTES.filter(l=>serve(l,esf,cil,add,true)).sort((a,b)=>a.preco-b.preco);
+  const pedido = cabe.filter(l=>serve(l,esf,cil,add,false));
+  const outras = cabe.filter(l=>!pedido.includes(l));
+  const grau = `${fmt(esf)} esférico, ${fmt(cil)} cilíndrico`;
 
-  if (!servem.length){
+  const lista = (arr, titulo) => arr.length ? `<div class="alt-t">${titulo}</div>` + arr.map(l=>`
+      <button class="opt linha">
+        ${l.img?`<img src="${l.img}" alt="" loading="lazy">`:''}
+        <span class="txt"><span class="opt-t">${l.nome}</span>
+        <span class="opt-s">${BRL(l.preco)} &middot; ${tratamentoDe(l)}</span></span>
+      </button>`).join('') : '';
+
+  const rodape = `<button class="btn amber" style="margin-top:14px">Comprar armação + lente</button>
+     <button class="btn ghost">Comprar só a armação</button>
+     <button class="linkish" id="voltar">voltar e mudar o grau</button>`;
+
+  if (!cabe.length){
     el('tela').innerHTML = `<span class="slabel">Esse grau a gente monta sob medida</span>
       <div class="vazio"><b>Nenhuma lente pronta atende</b>
-        Seu grau (${fmt(esf)} esférico, ${fmt(cil)} cilíndrico) está fora da grade de estoque.
-        A ótica monta sob medida — é só chamar no WhatsApp.</div>
+        Seu grau (${grau}) está fora da grade de estoque. A ótica monta sob medida &mdash;
+        é só chamar no WhatsApp.</div>
       <button class="btn amber" style="margin-top:12px">Falar com a ótica</button>
       <button class="btn ghost">Comprar só a armação</button>
       <button class="linkish" id="voltar">voltar e mudar o grau</button>`;
     el('voltar').onclick = telaGrau;
     return;
   }
-  const [primeira, ...resto] = servem;
+
+  if (!pedido.length){
+    el('tela').innerHTML = `<span class="slabel">O tratamento que você pediu não existe nesse grau</span>
+      <div class="vazio">Para ${grau} não temos lente com o tratamento escolhido.
+        Estas atendem seu grau &mdash; veja se alguma serve.</div>`
+      + lista(outras, 'Servem para o seu grau') + rodape;
+    el('voltar').onclick = telaGrau;
+    return;
+  }
+
+  const [primeira, ...resto] = pedido;
   el('tela').innerHTML = `<span class="slabel">Essa é a sua lente</span>` +
-    cardHTML(primeira, `Atende seu grau (${fmt(esf)} esférico, ${fmt(cil)} cilíndrico) e é a mais em conta com o tratamento que você escolheu.`) +
-    (resto.length ? `<div class="alt-t">Outras que também servem</div>` + resto.map(l=>`
-      <button class="opt linha">
-        ${l.img?`<img src="${l.img}" alt="" loading="lazy">`:''}
-        <span class="txt"><span class="opt-t">${l.nome}</span>
-        <span class="opt-s">${BRL(l.preco)}</span></span>
-      </button>`).join('') : '') +
-    `<button class="btn amber" style="margin-top:14px">Comprar armação + lente</button>
-     <button class="btn ghost">Comprar só a armação</button>
-     <button class="linkish" id="voltar">voltar e mudar o grau</button>`;
+    cardHTML(primeira, `Atende seu grau (${grau}) e tem ${tratamentoDe(primeira)}.`) +
+    lista(resto, 'Outras com o mesmo tratamento') +
+    lista(outras, 'Outras que também servem para o seu grau') +
+    rodape;
   el('voltar').onclick = telaGrau;
 }
 
