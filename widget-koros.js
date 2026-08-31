@@ -924,6 +924,7 @@
                                 <div class="q-seal"><i class="ph-fill ph-lock-key"></i><span>Pagamento<br>Seguro</span></div>
                             </div>
                             <button class="q-btn-buy-now" id="q-btn-buy-now" style="display:none;">Comprar Agora</button>
+                            <button class="q-btn-lentes" id="q-btn-escolher-lentes" style="display:none;"><span class="q-lentes-t">ESCOLHER LENTES</span><span class="q-lentes-s">a partir de R$ 99,90 &middot; monte seu &oacute;culos completo</span></button>
                             <div id="q-related-products" style="display:none;">
                                 <h4>Veja tamb&eacute;m</h4>
                                 <div class="q-related-grid" id="q-related-grid"></div>
@@ -2289,10 +2290,12 @@ const fd = new FormData();
    ========================================================================== */
 const LENTES = [
  {
-  "id": "233823564",
-  "variantId": "1027466887",
+  "id": "364307026",
+  "variantId": "1587369530",
   "nome": "MULTIFOCAL FREE FORM - LIGHT - RESINA + ANTIREFLEXO",
-  "preco": 299.9,
+  "preco": 399.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-18_28_44-691955038224a11a4c17881444137546-1024-1024.png",
+  "material": "Resina · campo de visão padrão",
   "visao": "multifocal",
   "semgrau": false,
   "blue": false,
@@ -2301,32 +2304,49 @@ const LENTES = [
   "neg": -6.0,
   "pos": 6.0,
   "cil": -6.0,
-  "add": 3.5,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-18_28_44-72308d41a5d10b0adb17881253373187-1024-1024.png",
-  "material": "Resina · campo de visão padrão"
+  "add": 3.5
  },
  {
-  "id": "233824624",
-  "variantId": "1027471616",
-  "nome": "MULTIFOCAL FREE FORM - LIGHT + FOTOSSENSSÍVEL + ANTIREFLEXO",
-  "preco": 479.9,
+  "id": "233823564",
+  "variantId": "1027466887",
+  "nome": "MULTIFOCAL FREE FORM - LIGHT - RESINA + ANTI-BLUE + ANTIREFLEXO",
+  "preco": 569.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-18_28_44-72308d41a5d10b0adb17881253373187-1024-1024.png",
+  "material": "Resina · campo de visão padrão",
   "visao": "multifocal",
   "semgrau": false,
-  "blue": false,
-  "foto": true,
+  "blue": true,
+  "foto": false,
   "ar": true,
   "neg": -6.0,
   "pos": 6.0,
   "cil": -6.0,
-  "add": 3.5,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-18_26_50-63a764502691129e9517881255170698-1024-1024.png",
-  "material": "Resina · campo de visão padrão"
+  "add": 3.5
+ },
+ {
+  "id": "364306884",
+  "variantId": "1587369193",
+  "nome": "MULTIFOCAL FREE FORM TOP ID - RESINA + ANTIREFLEXO",
+  "preco": 699.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-18_09_48-3726cec089d057a9ad17881440980990-1024-1024.png",
+  "material": "Resina · super campo de visão",
+  "visao": "multifocal",
+  "semgrau": false,
+  "blue": false,
+  "foto": false,
+  "ar": true,
+  "neg": -6.0,
+  "pos": 6.0,
+  "cil": -6.0,
+  "add": 3.5
  },
  {
   "id": "233812063",
   "variantId": "1027386011",
   "nome": "MULTIFOCAL FREE FORM TOP ID - RESINA + ANTI-BLUE + ANTIREFLEXO",
-  "preco": 649.9,
+  "preco": 899.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/6fed141a-a657-4b6e-acde-3550efc4cd64-e259fd42119d44309f17881247226562-1024-1024.png",
+  "material": "Resina · super campo de visão",
   "visao": "multifocal",
   "semgrau": false,
   "blue": true,
@@ -2335,15 +2355,15 @@ const LENTES = [
   "neg": -6.0,
   "pos": 6.0,
   "cil": -6.0,
-  "add": 3.5,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/6fed141a-a657-4b6e-acde-3550efc4cd64-e259fd42119d44309f17881247226562-1024-1024.png",
-  "material": "Resina · super campo de visão"
+  "add": 3.5
  },
  {
-  "id": "233812387",
-  "variantId": "1027387462",
-  "nome": "MULTIFOCAL FREE FORM TOP ID - RESINA + FOTOSSENSSÍVEL + ANTI-BLUE + ANTIREFLEXO",
-  "preco": 849.9,
+  "id": "233824624",
+  "variantId": "1027471616",
+  "nome": "MULTIFOCAL FREE FORM - LIGHT + FOTOSSENSSÍVEL + ANTI-BLUE + ANTIREFLEXO",
+  "preco": 899.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-18_26_50-63a764502691129e9517881255170698-1024-1024.png",
+  "material": "Resina · campo de visão padrão",
   "visao": "multifocal",
   "semgrau": false,
   "blue": true,
@@ -2352,15 +2372,32 @@ const LENTES = [
   "neg": -6.0,
   "pos": 6.0,
   "cil": -6.0,
-  "add": 3.5,
+  "add": 3.5
+ },
+ {
+  "id": "233812387",
+  "variantId": "1027387462",
+  "nome": "MULTIFOCAL FREE FORM TOP ID - RESINA + FOTOSSENSSÍVEL + ANTI-BLUE + ANTIREFLEXO",
+  "preco": 1099.0,
   "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/3a0c9509-e5e4-4f97-993f-0f9b821745b0-b732ac632ccc27e2b617881245909743-1024-1024.png",
-  "material": "Resina · super campo de visão"
+  "material": "Resina · super campo de visão",
+  "visao": "multifocal",
+  "semgrau": false,
+  "blue": true,
+  "foto": true,
+  "ar": true,
+  "neg": -6.0,
+  "pos": 6.0,
+  "cil": -6.0,
+  "add": 3.5
  },
  {
   "id": "165006225",
   "variantId": "1027342870",
   "nome": "PAR DE LENTES - BÁSICA RESINA + ANTIRREFLEXO",
   "preco": 99.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_16_05-3ee67b349e43c53a3c17881211847850-1024-1024.png",
+  "material": "Resina",
   "visao": "simples",
   "semgrau": false,
   "blue": false,
@@ -2369,15 +2406,15 @@ const LENTES = [
   "neg": -2.5,
   "pos": 2.5,
   "cil": -2.5,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_16_05-3ee67b349e43c53a3c17881211847850-1024-1024.png",
-  "material": "Resina"
+  "add": null
  },
  {
   "id": "165005351",
   "variantId": "1027343406",
   "nome": "PAR DE LENTES ANTI-BLUE RESINA + ANTIRREFLEXO",
   "preco": 159.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_24_54-12010b7ce475dd504f17881215027430-1024-1024.png",
+  "material": "Resina",
   "visao": "simples",
   "semgrau": false,
   "blue": true,
@@ -2386,15 +2423,15 @@ const LENTES = [
   "neg": -2.5,
   "pos": 2.5,
   "cil": -2.5,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_24_54-12010b7ce475dd504f17881215027430-1024-1024.png",
-  "material": "Resina"
+  "add": null
  },
  {
   "id": "233790933",
   "variantId": "1027320258",
   "nome": "PAR DE LENTES SEM GRAU - ANTI-BLUE + ANTIREFLEXO",
   "preco": 159.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_17_20-159ea1b181e8558eae17881211015894-1024-1024.png",
+  "material": "Resina",
   "visao": "simples",
   "semgrau": true,
   "blue": true,
@@ -2403,15 +2440,15 @@ const LENTES = [
   "neg": null,
   "pos": null,
   "cil": null,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_17_20-159ea1b181e8558eae17881211015894-1024-1024.png",
-  "material": "Resina"
+  "add": null
  },
  {
   "id": "164994445",
   "variantId": "622909310",
   "nome": "PAR DE LENTES - BÁSICA - KODAK INTRO 1.56",
   "preco": 189.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-e5a2e182f95941ba9417275214073037-1024-1024.png",
+  "material": "Resina 1.56",
   "visao": "simples",
   "semgrau": false,
   "blue": false,
@@ -2420,15 +2457,15 @@ const LENTES = [
   "neg": -2.5,
   "pos": 2.5,
   "cil": -2.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-e5a2e182f95941ba9417275214073037-1024-1024.png",
-  "material": "Resina 1.56"
+  "add": null
  },
  {
   "id": "165005716",
   "variantId": "1027348786",
   "nome": "PAR DE LENTES ANTI-BLUE POLI + ANTIRREFLEXO",
   "preco": 199.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_32_16-acf4a63b6b188ea80717881219631665-1024-1024.png",
+  "material": "Policarbonato",
   "visao": "simples",
   "semgrau": false,
   "blue": true,
@@ -2437,32 +2474,32 @@ const LENTES = [
   "neg": -4.0,
   "pos": 4.0,
   "cil": -4.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_32_16-acf4a63b6b188ea80717881219631665-1024-1024.png",
-  "material": "Policarbonato"
+  "add": null
  },
  {
   "id": "165006644",
   "variantId": "622954211",
   "nome": "PAR DE LENTES - BÁSICA POLICARBONATO + ANTIRREFLEXO",
   "preco": 199.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_27_21-346a75bdcadc0cfc2617881221645766-1024-1024.png",
+  "material": "Policarbonato",
   "visao": "simples",
   "semgrau": false,
   "blue": false,
   "foto": false,
   "ar": true,
-  "neg": -4.0,
-  "pos": 4.0,
+  "neg": -6.0,
+  "pos": 6.0,
   "cil": -4.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_27_21-346a75bdcadc0cfc2617881221645766-1024-1024.png",
-  "material": "Policarbonato"
+  "add": null
  },
  {
   "id": "165017587",
   "variantId": "1027356779",
   "nome": "PAR DE LENTES - RESINA FOTO + ANTI BLUE + AR - ESCURECE NO SOL",
   "preco": 199.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/be36f879-91a7-439a-a295-e2ef1fb334f1-2427527c876cd9864517881233702483-1024-1024.png",
+  "material": "Resina",
   "visao": "simples",
   "semgrau": false,
   "blue": true,
@@ -2471,15 +2508,15 @@ const LENTES = [
   "neg": -2.5,
   "pos": 2.5,
   "cil": -2.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/be36f879-91a7-439a-a295-e2ef1fb334f1-2427527c876cd9864517881233702483-1024-1024.png",
-  "material": "Resina"
+  "add": null
  },
  {
   "id": "164995212",
   "variantId": "622912331",
   "nome": "PAR DE LENTES - BÁSICA - KODAK INTRO POLY",
   "preco": 209.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-3f1ad48b2dc27af69c17275215451210-1024-1024.png",
+  "material": "Resina",
   "visao": "simples",
   "semgrau": false,
   "blue": false,
@@ -2488,15 +2525,15 @@ const LENTES = [
   "neg": -4.5,
   "pos": 4.0,
   "cil": -2.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-3f1ad48b2dc27af69c17275215451210-1024-1024.png",
-  "material": "Resina"
+  "add": null
  },
  {
   "id": "164995565",
   "variantId": "690619033",
   "nome": "PAR DE LENTES - KODAK BLUE RESINA",
   "preco": 209.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-4c038197da56d825fa17275214431218-1024-1024.png",
+  "material": "Resina",
   "visao": "simples",
   "semgrau": false,
   "blue": true,
@@ -2505,15 +2542,15 @@ const LENTES = [
   "neg": -2.5,
   "pos": 2.5,
   "cil": -2.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-4c038197da56d825fa17275214431218-1024-1024.png",
-  "material": "Resina"
+  "add": null
  },
  {
   "id": "164995831",
   "variantId": "622913733",
   "nome": "PAR DE LENTES - KODAK BLUE POLY",
   "preco": 279.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-7893fb1e1c0c22ee5d17275215666880-1024-1024.png",
+  "material": "Resina",
   "visao": "simples",
   "semgrau": false,
   "blue": true,
@@ -2522,15 +2559,15 @@ const LENTES = [
   "neg": -4.5,
   "pos": 4.0,
   "cil": -2.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-7893fb1e1c0c22ee5d17275215666880-1024-1024.png",
-  "material": "Resina"
+  "add": null
  },
  {
   "id": "165005940",
   "variantId": "622950251",
   "nome": "PAR DE LENTES - ANTI - BLUE + ANTIREFLEXO 1.67 - GRAU ALTO",
   "preco": 299.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/bf4a5924-b5e6-42b3-b5d9-4cdd3ad40a68-2ea12b309b214f723417881225265664-1024-1024.png",
+  "material": "Resina 1.67",
   "visao": "simples",
   "semgrau": false,
   "blue": true,
@@ -2539,15 +2576,15 @@ const LENTES = [
   "neg": -7.0,
   "pos": 6.0,
   "cil": -4.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/bf4a5924-b5e6-42b3-b5d9-4cdd3ad40a68-2ea12b309b214f723417881225265664-1024-1024.png",
-  "material": "Resina 1.67"
+  "add": null
  },
  {
   "id": "165043836",
   "variantId": "690620022",
   "nome": "PAR DE LENTES - KODAK CITY 1.56 Ar + FILTRO AZUL - MAIS COMPLETA DA LINHA",
   "preco": 299.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-4ae2fb03b86be8bf1417275215188587-1024-1024.png",
+  "material": "Resina 1.56",
   "visao": "simples",
   "semgrau": false,
   "blue": true,
@@ -2556,32 +2593,32 @@ const LENTES = [
   "neg": -2.5,
   "pos": 2.5,
   "cil": -2.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-4ae2fb03b86be8bf1417275215188587-1024-1024.png",
-  "material": "Resina 1.56"
+  "add": null
  },
  {
   "id": "165018270",
   "variantId": "1027369102",
   "nome": "PAR DE LENTES - POLI FOTO + AR",
   "preco": 349.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/12b43403-9b08-40e9-a1fa-b70936204a9d-4e0a681ab2c07b736417881238842622-1024-1024.png",
+  "material": "Policarbonato",
   "visao": "simples",
   "semgrau": false,
   "blue": false,
   "foto": true,
   "ar": true,
-  "neg": -4.0,
-  "pos": 4.0,
-  "cil": -4.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/12b43403-9b08-40e9-a1fa-b70936204a9d-4e0a681ab2c07b736417881238842622-1024-1024.png",
-  "material": "Policarbonato"
+  "neg": -6.0,
+  "pos": 6.0,
+  "cil": -6.0,
+  "add": null
  },
  {
   "id": "165044312",
   "variantId": "690620163",
   "nome": "PAR DE LENTES - KODAK CITY POLY Ar + FILTRO AZUL",
   "preco": 469.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-25b6fcec341478e00b17275215945823-1024-1024.png",
+  "material": "Resina",
   "visao": "simples",
   "semgrau": false,
   "blue": true,
@@ -2590,15 +2627,15 @@ const LENTES = [
   "neg": -4.5,
   "pos": 4.0,
   "cil": -2.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-25b6fcec341478e00b17275215945823-1024-1024.png",
-  "material": "Resina"
+  "add": null
  },
  {
   "id": "164996132",
   "variantId": "1027378268",
   "nome": "PAR DE LENTES - 1.67 ASFÉRICA FOTOSSENSSÍVEL COM ANTIREFLEXO - GRAU ALTO",
   "preco": 499.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/5c54a368-d08e-4f52-b0cc-e6f333c505cb-cd817dc33df3d2e87c17881229328363-1024-1024.png",
+  "material": "Resina 1.67",
   "visao": "simples",
   "semgrau": false,
   "blue": false,
@@ -2607,15 +2644,15 @@ const LENTES = [
   "neg": -7.0,
   "pos": 6.0,
   "cil": -4.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/5c54a368-d08e-4f52-b0cc-e6f333c505cb-cd817dc33df3d2e87c17881229328363-1024-1024.png",
-  "material": "Resina 1.67"
+  "add": null
  },
  {
   "id": "165004260",
   "variantId": "690619270",
   "nome": "PAR DE LENTES - ORMA ( RESINA) CRIZALROCK - MAIS RESISTÊNCIA",
   "preco": 499.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t075326-127-c97a84f3d2e864196d17275208911959-1024-1024.png",
+  "material": "Resina",
   "visao": "simples",
   "semgrau": false,
   "blue": false,
@@ -2624,15 +2661,15 @@ const LENTES = [
   "neg": -2.5,
   "pos": 2.5,
   "cil": -2.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t075326-127-c97a84f3d2e864196d17275208911959-1024-1024.png",
-  "material": "Resina"
+  "add": null
  },
  {
   "id": "165004934",
   "variantId": "690619356",
   "nome": "PAR DE LENTES - AIRWEAR (POLY) CRIZALROCK - MAIS RESISTÊNCIA",
   "preco": 649.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t075326-127-976b33a224ffe1269117275208540968-1024-1024.png",
+  "material": "Policarbonato",
   "visao": "simples",
   "semgrau": false,
   "blue": false,
@@ -2641,15 +2678,15 @@ const LENTES = [
   "neg": -4.5,
   "pos": 4.0,
   "cil": -2.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t075326-127-976b33a224ffe1269117275208540968-1024-1024.png",
-  "material": "Policarbonato"
+  "add": null
  },
  {
   "id": "165002430",
   "variantId": "1027361274",
   "nome": "PAR DE LENTES TRANSITIONS ORMA - TECNOLOGIA GEN 8 - ESCURECE COM MAIS INTENSIDADE",
   "preco": 779.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/0c85cbb5-104c-4dce-86bb-5c1b7954e7e8-774abb35c7074cbf4a17881236136847-1024-1024.png",
+  "material": "Resina",
   "visao": "simples",
   "semgrau": false,
   "blue": false,
@@ -2658,15 +2695,15 @@ const LENTES = [
   "neg": -2.5,
   "pos": 2.5,
   "cil": -2.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/0c85cbb5-104c-4dce-86bb-5c1b7954e7e8-774abb35c7074cbf4a17881236136847-1024-1024.png",
-  "material": "Resina"
+  "add": null
  },
  {
   "id": "164996275",
   "variantId": "1027373203",
   "nome": "PAR DE LENTES 1.74 ANTI-BLUE + ANTIREFLEXO - ULTRA FINA - GRAU ALTÍSSIMO",
   "preco": 899.9,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/7892f109-b032-4d69-9144-325970909266-be7dc1fe8e152e0bf817881226753232-1024-1024.png",
+  "material": "Resina 1.74",
   "visao": "simples",
   "semgrau": false,
   "blue": true,
@@ -2675,9 +2712,7 @@ const LENTES = [
   "neg": -10.0,
   "pos": null,
   "cil": -3.0,
-  "add": null,
-  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/7892f109-b032-4d69-9144-325970909266-be7dc1fe8e152e0bf817881226753232-1024-1024.png",
-  "material": "Resina 1.74"
+  "add": null
  }
 ];
 
@@ -3129,9 +3164,12 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         ir('q-step-lentes');
     }
     function inserirBotaoProduto() {
-        var buys = document.querySelectorAll('.js-addtocart, .btn-add-to-cart, [data-component="product.add-to-cart"]');
+        // So o botao do FORM do produto. O seletor largo casava 12 elementos nesta loja
+        // (cards de "Veja tambem" tambem usam .btn-add-to-cart) e criaria 12 botoes.
+        var form = document.getElementById('product_form') || document.querySelector('form.js-product-form');
+        var buys = form ? form.querySelectorAll('.js-addtocart, .btn-add-to-cart, [data-component="product.add-to-cart"]') : [];
         var achou = false;
-        buys.forEach(function (buy) {
+        [].slice.call(buys).forEach(function (buy) {
             if (!buy.parentNode || buy.parentNode.querySelector('.q-btn-lentes-produto')) return;
             achou = true;
             var b = document.createElement('button');
