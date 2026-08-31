@@ -194,7 +194,8 @@
             border: 1.5px solid #F39C12; border-radius: 4px;
             font-family: 'Poppins', var(--font-body), sans-serif; font-size: 14px; font-weight: 400; letter-spacing: normal; text-transform: uppercase;
             cursor: pointer; transition: background 0.25s, color 0.25s;
-            margin-bottom: 10px; box-sizing: border-box;
+            /* o provador agora fica ABAIXO do comprar: o respiro vai em cima, nao embaixo */
+            margin: 16px 0 10px; box-sizing: border-box;
         }
         .q-btn-inline-provador:hover { background: #F39C12; color: #fff; }
         .q-btn-inline-provador svg { width: 14px; height: 14px; flex-shrink: 0; }
