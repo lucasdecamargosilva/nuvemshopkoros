@@ -3257,39 +3257,42 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         track('abriu', { origem: 'botao_produto' });
         ir('q-step-lentes');
     }
+    function _botaoLentes() {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'q-btn-lentes-produto';
+        b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" '
+            + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<circle cx="6" cy="14" r="3.4"/><circle cx="18" cy="14" r="3.4"/>'
+            + '<path d="M9.4 14c.6-1 1.5-1.5 2.6-1.5s2 .5 2.6 1.5"/>'
+            + '<path d="M2.6 14V11.6c0-.7.4-1.3 1-1.6"/><path d="M21.4 14V11.6c0-.7-.4-1.3-1-1.6"/>'
+            + '</svg><span>ESCOLHER LENTES E COMPRAR</span>';
+        b.addEventListener('click', abrirFluxoDoProduto);
+        return b;
+    }
+
+    /* Ordem pedida: ESCOLHER LENTES > COMPRAR > PROVADOR — na area do produto E na barra
+       fixa que aparece ao rolar. Sao duas linhas de compra diferentes, entao cada uma
+       ganha o seu botao.
+       A guarda e' POR LINHA (marca a linha com data-pl-lentes). A guarda global de antes
+       so deixava um na pagina; a guarda por parentNode, antes dela, deixou aparecer 3 —
+       marcar a propria linha resolve os dois casos. */
     function inserirBotaoProduto() {
-        // So o botao do FORM do produto. O seletor largo casava 12 elementos nesta loja
-        // (cards de "Veja tambem" tambem usam .btn-add-to-cart) e criaria 12 botoes.
-        // UM botao por pagina. A guarda antiga olhava so o pai do botao de compra — mas
-        // desde que o botao passou a ser ancorado no PROVADOR (outro pai) ela nunca mais
-        // enxergava o que ja existia, e o intervalo de retentativa criava um a cada volta:
-        // apareceram 3 na barra fixa que surge ao rolar a pagina.
-        if (document.querySelector('.q-btn-lentes-produto')) return true;
-        var form = document.getElementById('product_form') || document.querySelector('form.js-product-form');
-        var buys = form ? form.querySelectorAll('.js-addtocart, .btn-add-to-cart, [data-component="product.add-to-cart"]') : [];
-        var achou = false;
-        [].slice.call(buys).forEach(function (buy) {
-            if (!buy.parentNode || achou) return;
-            achou = true;
-            var b = document.createElement('button');
-            b.type = 'button';
-            b.className = 'q-btn-lentes-produto';
-            b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" '
-                + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-                + '<circle cx="6" cy="14" r="3.4"/><circle cx="18" cy="14" r="3.4"/>'
-                + '<path d="M9.4 14c.6-1 1.5-1.5 2.6-1.5s2 .5 2.6 1.5"/>'
-                + '<path d="M2.6 14V11.6c0-.7.4-1.3 1-1.6"/><path d="M21.4 14V11.6c0-.7-.4-1.3-1-1.6"/>'
-                + '</svg><span>ESCOLHER LENTES E COMPRAR</span>';
-            b.addEventListener('click', abrirFluxoDoProduto);
-            // Ordem pedida: ESCOLHER LENTES > COMPRAR > PROVADOR. Entao o botao entra ACIMA
-            // da linha de compra do form REAL (que fica abaixo das variacoes). A barra fixa
-            // que surge ao rolar e' so um clone do comprar — nao ganha botao proprio.
-            var alvo = document.querySelector('#product_form [data-component="product.add-to-cart"], #product_form .js-addtocart:not(.js-scroll-to-form)') || buy;
-            var linha = (alvo.closest && alvo.closest('.form-row')) || alvo;
-            if (linha.parentNode) linha.parentNode.insertBefore(b, linha);
-            else buy.parentNode.insertBefore(b, buy);
+        var linhas = [];
+        var real = document.querySelector('#product_form [data-component="product.add-to-cart"], #product_form .js-addtocart:not(.js-scroll-to-form)');
+        var fixo = document.querySelector('.js-addtocart.js-scroll-to-form, .js-scroll-to-form.btn-add-to-cart');
+        [real, fixo].forEach(function (btn) {
+            if (!btn) return;
+            var linha = (btn.closest && btn.closest('.form-row')) || btn;
+            if (linha && linha.parentNode && linhas.indexOf(linha) === -1) linhas.push(linha);
         });
-        return achou;
+        if (!linhas.length) return false;
+        linhas.forEach(function (linha) {
+            if (linha.getAttribute('data-pl-lentes')) return;
+            linha.setAttribute('data-pl-lentes', '1');
+            linha.parentNode.insertBefore(_botaoLentes(), linha);   // ACIMA do comprar
+        });
+        return true;
     }
 
     /* ---------- init ---------- */
@@ -3302,18 +3305,8 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         }
         // O botao do provador as vezes entra DEPOIS (o tema re-renderiza a linha de compra).
         // Reancora algumas vezes para o ESCOLHER LENTES nao ficar acima dele.
-        [600, 1800, 4000].forEach(function (ms) {
-            setTimeout(function () {
-                var todos = document.querySelectorAll('.q-btn-lentes-produto');
-                for (var i = 1; i < todos.length; i++) todos[i].remove();   // sobrou duplicata: limpa
-                var lentes = todos[0];
-                var alvo = document.querySelector('#product_form [data-component="product.add-to-cart"], #product_form .js-addtocart:not(.js-scroll-to-form)');
-                var linha = alvo ? ((alvo.closest && alvo.closest('.form-row')) || alvo) : null;
-                if (lentes && linha && linha.parentNode && linha.previousSibling !== lentes) {
-                    linha.parentNode.insertBefore(lentes, linha);
-                }
-            }, ms);
-        });
+        // O tema re-renderiza a linha de compra: reancora algumas vezes.
+        [600, 1800, 4000].forEach(function (ms) { setTimeout(inserirBotaoProduto, ms); });
         // observa o botao de compra do provador pra espelhar a visibilidade
         var buy = document.getElementById('q-btn-buy-now');
         if (buy) {
