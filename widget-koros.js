@@ -1360,13 +1360,14 @@
         }
         inlineBtn.addEventListener('click', _qInlineClick);
 
-        // Koros: posiciona o botão inline acima do botão de compra.
+        // Koros: o provador fica ABAIXO do botao de compra (ordem pedida pelo Lucas em
+        // 31/08/2026: ESCOLHER LENTES > COMPRAR > PROVADOR).
         // O form da Nuvemshop pode renderizar async → tenta em loop até o comprar existir.
         function _qPlaceInline() {
             if (inlineBtn.isConnected) return true;
             var buyBtn = document.querySelector('.js-addtocart, .btn-add-to-cart, [data-component="product.add-to-cart"]');
             var buyRow = buyBtn ? (buyBtn.closest('.form-row') || buyBtn) : null;
-            if (buyRow && buyRow.parentNode) { buyRow.parentNode.insertBefore(inlineBtn, buyRow); return true; }
+            if (buyRow && buyRow.parentNode) { buyRow.parentNode.insertBefore(inlineBtn, buyRow.nextSibling); return true; }
             var variantsContainer = document.querySelector('.js-product-variants');
             if (variantsContainer && variantsContainer.parentNode) {
                 variantsContainer.parentNode.insertBefore(inlineBtn, variantsContainer.nextSibling); return true;
@@ -1388,7 +1389,7 @@
             var inlineBtn2 = inlineBtn.cloneNode(true);
             inlineBtn2.classList.add('q-btn-inline-provador-real');
             inlineBtn2.addEventListener('click', _qInlineClick);
-            realRow.parentNode.insertBefore(inlineBtn2, realRow);
+            realRow.parentNode.insertBefore(inlineBtn2, realRow.nextSibling);   // abaixo do COMPRAR
             return true;
         }
         if (!_qPlaceInlineReal()) {
@@ -3272,13 +3273,13 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             b.className = 'q-btn-lentes-produto';
             b.textContent = 'ESCOLHER LENTES E COMPRAR';
             b.addEventListener('click', abrirFluxoDoProduto);
-            // ESCOLHER LENTES fica LOGO ABAIXO do botao do provador (pedido do Lucas em
-            // 31/08/2026). Na Koros o provador entra ACIMA da linha de compra, e ele pode
-            // estar em outro pai que o botao de comprar — por isso a busca e' no documento,
-            // com o botao de compra como plano B.
-            var inline = document.querySelector('.q-btn-inline-provador-real, .q-btn-inline-provador');
-            if (inline && inline.parentNode) inline.parentNode.insertBefore(b, inline.nextSibling);
-            else buy.parentNode.insertBefore(b, buy.nextSibling);
+            // Ordem pedida: ESCOLHER LENTES > COMPRAR > PROVADOR. Entao o botao entra ACIMA
+            // da linha de compra do form REAL (que fica abaixo das variacoes). A barra fixa
+            // que surge ao rolar e' so um clone do comprar — nao ganha botao proprio.
+            var alvo = document.querySelector('#product_form [data-component="product.add-to-cart"], #product_form .js-addtocart:not(.js-scroll-to-form)') || buy;
+            var linha = (alvo.closest && alvo.closest('.form-row')) || alvo;
+            if (linha.parentNode) linha.parentNode.insertBefore(b, linha);
+            else buy.parentNode.insertBefore(b, buy);
         });
         return achou;
     }
@@ -3297,10 +3298,11 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             setTimeout(function () {
                 var todos = document.querySelectorAll('.q-btn-lentes-produto');
                 for (var i = 1; i < todos.length; i++) todos[i].remove();   // sobrou duplicata: limpa
-                var inline = document.querySelector('.q-btn-inline-provador-real, .q-btn-inline-provador');
                 var lentes = todos[0];
-                if (inline && lentes && inline.nextSibling !== lentes && inline.parentNode) {
-                    inline.parentNode.insertBefore(lentes, inline.nextSibling);
+                var alvo = document.querySelector('#product_form [data-component="product.add-to-cart"], #product_form .js-addtocart:not(.js-scroll-to-form)');
+                var linha = alvo ? ((alvo.closest && alvo.closest('.form-row')) || alvo) : null;
+                if (lentes && linha && linha.parentNode && linha.previousSibling !== lentes) {
+                    linha.parentNode.insertBefore(lentes, linha);
                 }
             }, ms);
         });
