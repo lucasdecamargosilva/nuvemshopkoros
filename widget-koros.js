@@ -2764,7 +2764,11 @@ function recomendar(e) {
   if (!cabe.length)   return { fora: 'grau', outras: [] };
   if (!pedido.length) return { fora: 'tratamento', outras: cabe };
   const lente = pedido[0];
-  const outras = cabe.filter(l => l !== lente);
+  // So as do MESMO tratamento (pedido do Lucas em 31/08/2026). Antes listava tudo que
+  // cabia na grade ignorando o tratamento: com grau baixo isso dava 17 alternativas —
+  // virava despejo de catalogo, nao escolha. Na Maxilook o problema nao existia porque
+  // la cada faixa tem UMA lente por tratamento.
+  const outras = pedido.filter(l => l !== lente);
   return { lente, temAstig: g.cil > 0, outras, porque: porque(e.trat, g, lente) };
 }
 
@@ -2951,7 +2955,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         if (alt) {
             var _o = (rec && rec.outras) || [];
             alt.innerHTML = _o.length
-                ? '<div class="q-alt-titulo">Outras que também servem para o seu grau</div>' + _o.map(function (l) {
+                ? '<div class="q-alt-titulo">Outras opções com o mesmo tratamento</div>' + _o.map(function (l) {
                     return '<button type="button" class="q-opt q-opt-lente" data-lente="' + l.id + '">'
                         + (l.img ? '<img class="q-opt-foto" src="' + l.img + '" alt="" loading="lazy">' : '')
                         + '<span class="q-opt-txt"><span class="q-opt-t">' + l.nome + '</span>'
