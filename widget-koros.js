@@ -3288,11 +3288,27 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         });
         if (!linhas.length) return false;
         linhas.forEach(function (linha) {
-            if (linha.getAttribute('data-pl-lentes')) return;
-            linha.setAttribute('data-pl-lentes', '1');
-            linha.parentNode.insertBefore(_botaoLentes(), linha);   // ACIMA do comprar
+            if (!linha.getAttribute('data-pl-lentes')) {
+                linha.setAttribute('data-pl-lentes', '1');
+                linha.parentNode.insertBefore(_botaoLentes(), linha);   // ACIMA do comprar
+            }
+            _igualaAltura(linha);
         });
         return true;
+    }
+
+    /* Mesma altura do COMPRAR. Em vez de chutar um padding, mede o botao do tema em
+       tempo real — assim continua igual se a loja trocar de tema ou de tamanho de fonte.
+       Roda de novo nas reancoragens porque o botao do tema so ganha altura depois de
+       renderizar (no primeiro passo ele mede 0). */
+    function _igualaAltura(linha) {
+        try {
+            var lentes = linha.previousElementSibling;
+            if (!lentes || !lentes.classList.contains('q-btn-lentes-produto')) return;
+            var alvo = linha.querySelector('.js-addtocart, .btn-add-to-cart, [data-component="product.add-to-cart"]') || linha;
+            var h = Math.round(alvo.getBoundingClientRect().height);
+            if (h > 20) { lentes.style.height = h + 'px'; lentes.style.padding = '0 16px'; }
+        } catch (e) {}
     }
 
     /* ---------- init ---------- */
