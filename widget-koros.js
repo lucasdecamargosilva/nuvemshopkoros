@@ -1,34 +1,48 @@
 /* ==========================================================================
-   Botao de compra REAL do produto (helper compartilhado)
+   Ancoragem dos botoes do widget na pagina do produto (helper compartilhado)
 
-   A Nuvemshop renderiza mais de um "Comprar" na pagina do produto:
-   1) o do #product_form (o real);
-   2) o da barra FIXA que aparece ao rolar (.js-scroll-to-form) — que no mobile
-      vem ANTES no DOM e casa com os mesmos seletores;
-   3) os cards de "Veja tambem".
-   Ancorar nos itens 2/3 fazia os botoes do widget aparecerem dentro da barra
-   fixa e duplicados. Aqui devolvemos apenas o botao real.
+   O tema da Koros NAO tem #product_form: ele renderiza a MESMA linha de compra
+   varias vezes (4 copias nesta loja — layouts de desktop/mobile e a barra fixa
+   que aparece ao rolar), quase todas escondidas por CSS. Ancorar em "a primeira"
+   ou "a ultima" acertava uma copia escondida, e a barra fixa (que e' um clone do
+   bloco de compra) reaparecia com nossos botoes dentro dela, triplicados.
+
+   Solucao: injetar em TODAS as linhas de compra reais (uma copia por linha, o
+   CSS do tema esconde as que nao sao da viewport atual) e descartar as que estao
+   dentro de um ancestral fixed/sticky — a barra flutuante. Como o tema CLONA o
+   bloco, os clones perdem os listeners; por isso os cliques sao tratados por
+   delegacao no document.
    ========================================================================== */
-window.__qKorosBuyBtn = function () {
-    var form = document.getElementById('product_form') || document.querySelector('form.js-product-form');
-    var sel = '[data-component="product.add-to-cart"], .js-addtocart, .btn-add-to-cart';
-    var buys = [].slice.call((form || document).querySelectorAll(sel));
-    buys = buys.filter(function (b) {
-        if (b.classList.contains('js-scroll-to-form')) return false;
-        if (b.closest('.js-item-product, .js-product-item, .item-product, .js-product-table-item')) return false;
-        // barra fixa / sticky: qualquer ancestral posicionado fora do fluxo
-        for (var el = b; el && el !== document.body; el = el.parentElement) {
-            var pos = '';
-            try { pos = getComputedStyle(el).position; } catch (_) { }
-            if (pos === 'fixed' || pos === 'sticky') return false;
-        }
-        return true;
-    });
-    return buys.length ? buys[buys.length - 1] : null;
+window.__qKorosSobBarraFixa = function (el) {
+    for (var n = el; n && n !== document.body; n = n.parentElement) {
+        var pos = '';
+        try { pos = getComputedStyle(n).position; } catch (_) { }
+        if (pos === 'fixed' || pos === 'sticky') return true;
+    }
+    return false;
 };
-window.__qKorosBuyRow = function () {
-    var b = window.__qKorosBuyBtn();
-    return b ? (b.closest('.form-row') || b) : null;
+window.__qKorosBuyRows = function () {
+    var sel = '[data-component="product.add-to-cart"], input.js-addtocart, button.js-addtocart, .btn-add-to-cart';
+    var buys = [].slice.call(document.querySelectorAll(sel));
+    var rows = [];
+    buys.forEach(function (b) {
+        if (b.classList.contains('js-scroll-to-form')) return;
+        if (b.classList.contains('js-addtocart-placeholder') || b.classList.contains('js-addtocart-placeholder-btn')) return;
+        // cards de listagem ("Veja tambem", quickshop, cross-selling)
+        if (b.closest('.js-item-product, .js-product-item, .item-product, .js-quickshop-container, .js-cross-selling-container')) return;
+        if (window.__qKorosSobBarraFixa(b)) return;
+        var row = b.closest('.buy-button-container') || b.closest('.form-row') || b;
+        if (row.parentNode && rows.indexOf(row) === -1) rows.push(row);
+    });
+    return rows;
+};
+// compat: quem so precisa de uma ancora
+window.__qKorosBuyRow = function () { return window.__qKorosBuyRows()[0] || null; };
+// remove copias que ficaram orfas ou foram parar dentro da barra fixa (clones do tema)
+window.__qKorosLimparClones = function (seletor) {
+    [].slice.call(document.querySelectorAll(seletor)).forEach(function (el) {
+        if (window.__qKorosSobBarraFixa(el)) el.remove();
+    });
 };
 
 (function () {
@@ -1391,33 +1405,39 @@ window.__qKorosBuyRow = function () {
             populateImageSelector();
             openModal();
         }
-        inlineBtn.addEventListener('click', _qInlineClick);
+        // Delegacao: o tema clona o bloco de compra (barra fixa), e clones nao
+        // carregam listeners — por isso o clique e' ouvido no document.
+        document.addEventListener('click', function (e) {
+            var alvo = e.target && e.target.closest && e.target.closest('.q-btn-inline-provador');
+            if (alvo) _qInlineClick(e);
+        });
 
-        // Koros: posiciona o botão inline acima do botão de compra.
-        // O form da Nuvemshop pode renderizar async → tenta em loop até o comprar existir.
+        // Koros: um PROVADOR VIRTUAL abaixo de cada linha de compra real.
+        // O tema renderiza a linha varias vezes (desktop/mobile), entao injetamos
+        // em todas — o CSS do tema esconde as que nao valem para a viewport.
         function _qPlaceInline() {
-            if (inlineBtn.isConnected) return true;
-            var buyRow = window.__qKorosBuyRow();
-            if (buyRow && buyRow.parentNode) { buyRow.parentNode.insertBefore(inlineBtn, buyRow.nextSibling); return true; }
-            var variantsContainer = document.querySelector('.js-product-variants');
-            if (variantsContainer && variantsContainer.parentNode) {
-                variantsContainer.parentNode.insertBefore(inlineBtn, variantsContainer.nextSibling); return true;
-            }
-            return false;
+            window.__qKorosLimparClones('.q-btn-inline-provador');
+            var rows = window.__qKorosBuyRows();
+            if (!rows.length) return false;
+            rows.forEach(function (row) {
+                var pai = row.parentNode;
+                var atual = pai.querySelector(':scope > .q-btn-inline-provador');
+                if (!atual) { atual = inlineBtn.cloneNode(true); }
+                if (row.nextSibling !== atual) pai.insertBefore(atual, row.nextSibling);
+            });
+            return true;
         }
 
-        // Antes existia um 2º botão inline clonado ("...-provador-real") porque o
-        // seletor antigo casava com o "Comprar" da barra fixa (.js-scroll-to-form).
-        // Com __qKorosBuyRow() só existe uma âncora — o botão real — então um único
-        // botão basta e o clone só duplicava a UI na barra fixa.
+        _qPlaceInline();
+        var _qTries = 0;
+        var _qIv = setInterval(function () {
+            _qTries++;
+            if (_qTries > 40) clearInterval(_qIv);
+            _qPlaceInline();
+        }, 250);
+        // a barra fixa so vira fixed depois do scroll: limpa os clones dela
+        window.addEventListener('scroll', function () { window.__qKorosLimparClones('.q-btn-inline-provador'); }, { passive: true });
 
-        if (!_qPlaceInline()) {
-            var _qTries = 0;
-            var _qIv = setInterval(function () {
-                _qTries++;
-                if (_qPlaceInline() || _qTries > 40) clearInterval(_qIv);
-            }, 250);
-        }
         const genBtn      = document.getElementById('q-btn-generate');
         const nextBtn     = null; // single-step flow — no next button
         const phoneStep   = null;
@@ -3266,52 +3286,57 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         ir('q-step-lentes');
     }
     function inserirBotaoProduto() {
-        var row = window.__qKorosBuyRow();
-        if (!row || !row.parentNode) return false;
-        // limpa qualquer copia que tenha sobrado de uma renderizacao anterior do tema
-        [].slice.call(document.querySelectorAll('.q-btn-lentes-produto')).forEach(function (el) {
-            if (el.parentNode !== row.parentNode) el.remove();
+        window.__qKorosLimparClones('.q-btn-lentes-produto');
+        var rows = window.__qKorosBuyRows();
+        if (!rows.length) return false;
+        rows.forEach(function (row) {
+            var pai = row.parentNode;
+            var b = pai.querySelector(':scope > .q-btn-lentes-produto');
+            if (!b) {
+                b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'q-btn-lentes-produto';
+                b.textContent = 'ESCOLHER LENTES E COMPRAR';
+            }
+            // Ordem pedida (31/08/2026): ESCOLHER LENTES E COMPRAR > COMPRAR > PROVADOR.
+            if (row.previousElementSibling !== b) pai.insertBefore(b, row);
         });
-        var b = row.parentNode.querySelector('.q-btn-lentes-produto');
-        if (!b) {
-            b = document.createElement('button');
-            b.type = 'button';
-            b.className = 'q-btn-lentes-produto';
-            b.textContent = 'ESCOLHER LENTES E COMPRAR';
-            b.addEventListener('click', abrirFluxoDoProduto);
-        }
-        // Ordem pedida (31/08/2026): ESCOLHER LENTES E COMPRAR > COMPRAR > PROVADOR.
-        if (row.previousElementSibling !== b) row.parentNode.insertBefore(b, row);
         return true;
     }
 
-    // Mantem a ordem mesmo se o tema re-renderizar a linha de compra.
+    // Mantem a ordem mesmo quando o tema re-renderiza a linha de compra.
     function _qReordenar() {
-        var row = window.__qKorosBuyRow();
-        if (!row || !row.parentNode) return;
         inserirBotaoProduto();
-        var inlines = [].slice.call(document.querySelectorAll('.q-btn-inline-provador-real, .q-btn-inline-provador'));
-        var inline = inlines.filter(function (el) { return el.parentNode === row.parentNode; })[0] || inlines[0];
-        inlines.forEach(function (el) { if (el !== inline) el.remove(); });
-        if (inline && row.nextSibling !== inline) row.parentNode.insertBefore(inline, row.nextSibling);
+        window.__qKorosBuyRows().forEach(function (row) {
+            var pai = row.parentNode;
+            var inline = pai.querySelector(':scope > .q-btn-inline-provador');
+            if (inline && row.nextSibling !== inline) pai.insertBefore(inline, row.nextSibling);
+        });
     }
 
     /* ---------- init ---------- */
     function init() {
         popular();
         wireArquivo();
-        // botao na pagina do produto (acima do comprar); tenta ate o botao de compra existir.
-        // No mobile a linha de compra pode ser montada bem depois (ou o #product_form
-        // nem existir na primeira pintura), entao alem do intervalo observamos o DOM.
-        if (!inserirBotaoProduto()) {
-            var t = 0, iv = setInterval(function () { if (inserirBotaoProduto() || ++t > 40) clearInterval(iv); }, 300);
-            var mo = new MutationObserver(function () { if (inserirBotaoProduto()) { mo.disconnect(); clearInterval(iv); } });
-            mo.observe(document.body, { childList: true, subtree: true });
-            setTimeout(function () { mo.disconnect(); }, 15000);
-        }
-        // O botao do provador as vezes entra DEPOIS (o tema re-renderiza a linha de compra).
-        // Reancora algumas vezes para manter LENTES > COMPRAR > PROVADOR.
-        [600, 1800, 4000].forEach(function (ms) { setTimeout(_qReordenar, ms); });
+        // clones feitos pelo tema nao carregam listeners: clique por delegacao
+        document.addEventListener('click', function (e) {
+            var alvo = e.target && e.target.closest && e.target.closest('.q-btn-lentes-produto');
+            if (alvo) abrirFluxoDoProduto(e);
+        });
+        // botao na pagina do produto (acima do comprar); a linha de compra pode ser
+        // montada bem depois no mobile, entao tentamos por um tempo e observamos o DOM
+        inserirBotaoProduto();
+        var t = 0, iv = setInterval(function () { _qReordenar(); if (++t > 40) clearInterval(iv); }, 300);
+        // debounce: _qReordenar mexe no DOM e realimentaria o observer
+        var _qAg = null;
+        var mo = new MutationObserver(function () {
+            if (_qAg) return;
+            _qAg = setTimeout(function () { _qAg = null; _qReordenar(); }, 120);
+        });
+        mo.observe(document.body, { childList: true, subtree: true });
+        setTimeout(function () { mo.disconnect(); }, 15000);
+        // a barra fixa so vira fixed apos o scroll: remove os clones que caem nela
+        window.addEventListener('scroll', function () { window.__qKorosLimparClones('.q-btn-lentes-produto'); }, { passive: true });
         // observa o botao de compra do provador pra espelhar a visibilidade
         var buy = document.getElementById('q-btn-buy-now');
         if (buy) {
