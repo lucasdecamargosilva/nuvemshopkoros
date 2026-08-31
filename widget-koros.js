@@ -3086,6 +3086,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         if (t.dataset.carrinho === 'sem') {
             e.preventDefault();
             if (!travarCompra(t, 'Adicionando…')) return;
+            marcarCliqueCarrinho(false);
             track('so_armacao', { visao: st.visao }); comprarArmacao(); return;
         }
 
@@ -3105,10 +3106,12 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             e.preventDefault();
             if (!travarCompra(t, 'Adicionando…')) return;
             if (st.lente && FASE_CARRINHO_LENTE) {
+                marcarCliqueCarrinho(true);
                 track('carrinho', { lente: st.lente.nome, preco: st.lente.preco, fase: 'armacao_mais_lente' });
                 comprarComLente(st.lente);   // adiciona armação + lente
             } else {
                 // fora da faixa (sem lente) ou fase desligada: só a armação
+                marcarCliqueCarrinho(false);
                 track('so_armacao', { visao: st.visao, motivo: 'sem_lente' });
                 comprarArmacao();
             }
@@ -3141,6 +3144,29 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             if (btn) btn.textContent = 'Tentar de novo';
         }, 12000);
         return true;
+    }
+
+
+    /* Clique em COMPRAR dentro do fluxo de lentes: marca carrinho_adicionado na prova
+       (mesmo webhook do "Comprar Agora" do provador) e registra no funil de lentes.
+       Sem isto, quem comprava PELO fluxo de lentes nao contava como "clicou em comprar"
+       no CRM — so quem clicava pelo provador. */
+    function marcarCliqueCarrinho(comLente) {
+        try {
+            var tel = (document.getElementById('q-phone') || {}).value || '';
+            var prod = (document.getElementById('q-result-prodname') || {}).textContent
+                || (document.querySelector('h1.product-title,h1.product__title,.product-single__title,h1') || {}).innerText
+                || document.title || '';
+            fetch('https://n8n.segredosdodrop.com/webhook/pl-provador-buy-click', {
+                method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone: tel, origin: location.origin, produto: prod,
+                    fonte: 'fluxo_lentes', com_lente: !!comLente,
+                    lente: comLente && st.lente ? st.lente.nome : null,
+                    lente_preco: comLente && st.lente ? st.lente.preco : null
+                })
+            }).catch(function () {});
+        } catch (e) {}
     }
 
     function comprarComLente(lente) {
