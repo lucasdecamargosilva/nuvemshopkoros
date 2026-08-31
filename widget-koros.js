@@ -677,6 +677,134 @@
         }
         .q-powered-footer span { font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--c-muted); }
         .q-quantic-logo { height: 20px; opacity: 0.7; }
+
+/* ====== ESCOLHER LENTES ====== */
+
+        .q-btn-lentes {
+            width: 100%; margin-top: 9px; padding: 12px 16px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+            background: #F39C12; color: #fff; border: 1px solid #F39C12; border-radius: 14px;
+            font-family: var(--font-body); cursor: pointer; box-sizing: border-box; transition: background .2s;
+        }
+        .q-btn-lentes:hover { background: #d97706; border-color: #d97706; }
+        .q-btn-lentes .q-lentes-t { font-size: 14px; font-weight: 700; letter-spacing: .4px; line-height: 1.2; }
+        .q-btn-lentes .q-lentes-s { font-size: 10.5px; font-weight: 500; opacity: .92; line-height: 1.2; }
+        /* botao secundario "COMPRAR SOMENTE A ARMACAO": IGUAL ao primario (.q-btn-black)
+           em tamanho, so troca o rosa por PRETO. flex centraliza o texto; font-size/
+           letter-spacing um tico menores pro rotulo (mais longo) caber em 1 linha. */
+        #q-so-armacao {
+            width: 100%; height: 52px; margin-top: 9px; box-sizing: border-box;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--c-ink); color: #fff; border: none; border-radius: 14px;
+            font-family: var(--font-display); font-size: 13px; letter-spacing: 2px;
+            text-transform: uppercase; white-space: nowrap; cursor: pointer; transition: opacity .2s;
+        }
+        #q-so-armacao:hover { opacity: .88; }
+        /* botao ESCOLHER LENTES E COMPRAR na PAGINA DO PRODUTO (abaixo do comprar) */
+        .q-btn-lentes-produto {
+            width: 100%; margin-top: 10px; padding: 14px 16px; box-sizing: border-box;
+            display: block; text-align: center;
+            background: #F39C12; color: #fff; border: none; border-radius: 0;
+            font-family: 'Work Sans', var(--font-body), sans-serif; font-size: 11px; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: opacity .2s;
+        }
+        .q-btn-lentes-produto:hover { opacity: .9; }
+
+/* atributo hidden manda: sem isso, classes com display:flex (.q-lendo etc.)
+   vencem o [hidden] por ordem de fonte e o elemento aparece cedo demais */
+#q-modal-ia [hidden] { display: none !important; }
+
+/* ===== fluxo ESCOLHER LENTES (mesma linguagem visual do provador) ===== */
+#q-step-lentes, #q-step-receita, #q-step-upload, #q-step-lente-final {
+    display: none; flex-direction: column; padding: 26px 28px 30px; gap: 0;
+}
+.q-passos { display:flex; gap:5px; margin-bottom:20px; }
+.q-passos i { height:3px; flex:1; background:var(--c-line); border-radius:2px; }
+.q-passos i.on   { background:var(--c-ink); }
+.q-passos i.done { background:var(--c-accent); opacity:.45; }
+
+.q-opt {
+    width:100%; text-align:left; background:var(--c-bg);
+    border:1.5px solid var(--c-line); border-radius:14px;
+    padding:15px 16px; margin-bottom:10px; cursor:pointer; font-family:var(--font-body);
+    display:flex; flex-direction:column; gap:3px; transition:border-color .18s, background .18s;
+}
+.q-opt:hover { border-color:var(--c-ink); background:var(--c-surface); }
+.q-opt-t { font-size:14px; font-weight:600; color:var(--c-ink-text, var(--c-ink)); }
+.q-opt-s { font-size:11.5px; color:var(--c-muted); line-height:1.45; }
+.q-opt-destaque { border-color:var(--c-ink); background:var(--c-surface); }
+
+.q-lente-drop {
+    border:2px dashed var(--c-line); border-radius:14px; padding:32px 20px;
+    text-align:center; cursor:pointer; transition:border-color .18s, background .18s;
+}
+.q-lente-drop:hover { border-color:var(--c-ink); background:var(--c-surface); }
+.q-lente-drop-i { font-size:30px; margin-bottom:8px; }
+.q-lente-drop-t { font-size:13.5px; font-weight:600; color:var(--c-ink-text, var(--c-ink)); }
+.q-lente-drop-s { font-size:11px; color:var(--c-muted); margin-top:3px; }
+
+.q-lendo { display:flex; flex-direction:column; align-items:center; gap:12px; padding:22px 10px;
+           font-size:12.5px; color:var(--c-muted); }
+.q-lendo img { max-width:140px; max-height:180px; border-radius:10px;
+               border:1px solid var(--c-line); box-shadow:0 4px 14px rgba(0,0,0,.10); }
+.q-lendo-arq { font-size:11px; font-weight:600; color:var(--c-ink-text, var(--c-ink));
+               word-break:break-all; text-align:center; max-width:220px; }
+.q-spin { width:26px; height:26px; border:2.5px solid var(--c-line);
+          border-top-color:var(--c-ink); border-radius:50%; animation:q-spin .8s linear infinite; }
+@keyframes q-spin { to { transform: rotate(360deg); } }
+
+.q-banner-ia { background:var(--c-surface); border:1px solid var(--c-line); border-radius:11px;
+               padding:11px 13px; font-size:11.5px; line-height:1.5; color:var(--c-ink-text, var(--c-ink));
+               margin-bottom:14px; }
+.q-erro-leitura { background:#fff5f5; border:1px solid #fbc4c4; border-radius:11px;
+                  padding:11px 13px; font-size:11.5px; line-height:1.55; color:#9b2c2c; margin-top:10px; }
+.q-erro-leitura a { color:#9b2c2c; font-weight:700; text-decoration:underline; cursor:pointer; }
+
+.q-olho { border:1.5px solid var(--c-line); border-radius:13px; padding:12px 13px; margin-bottom:11px; }
+.q-olho-tag { font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--c-muted);
+              font-weight:600; display:block; margin-bottom:9px; }
+.q-olho-campos { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.q-olho-campos label { font-size:9.5px; text-transform:uppercase; letter-spacing:.06em;
+                       color:var(--c-muted); display:flex; flex-direction:column; gap:4px; }
+.q-olho-campos select { border:1.5px solid var(--c-line); border-radius:9px; padding:8px 6px;
+                        font-size:12.5px; font-family:var(--font-body); background:var(--c-bg);
+                        color:var(--c-ink-text, var(--c-ink)); }
+
+.q-card-lente { border:2px solid var(--c-ink); border-radius:14px; padding:17px; margin-bottom:12px; }
+/* foto do produto vinda da loja (1024px: deixamos o browser reduzir) */
+.q-lente-foto { width:100%; max-width:190px; height:auto; display:block; margin:0 auto 13px;
+                border-radius:10px; background:var(--c-surface); }
+.q-opt-lente { flex-direction:row; align-items:center; gap:12px; }
+.q-opt-foto  { width:52px; height:52px; object-fit:cover; border-radius:9px; flex-shrink:0;
+               background:var(--c-surface); }
+.q-opt-txt   { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.q-card-lente-nome { font-size:14px; font-weight:600; line-height:1.35; }
+.q-card-lente-mat  { font-size:11px; color:var(--c-muted); margin:3px 0 11px; }
+.q-card-lente-preco{ font-size:27px; font-weight:700; }
+.q-card-lente-parc { font-size:11.5px; color:var(--c-muted); margin-top:1px; }
+.q-card-lente-pq   { background:var(--c-surface); border-radius:10px; padding:11px 12px;
+                     margin-top:13px; font-size:12px; line-height:1.5; }
+.q-card-lente-pq b { display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:.1em;
+                     color:var(--c-muted); margin-bottom:4px; }
+.q-grau-anotado { background:var(--c-bg); border:1px solid var(--c-line); border-radius:10px;
+                  padding:11px 12px; margin-top:11px; display:flex; flex-direction:column; gap:3px;
+                  font-size:12.5px; font-variant-numeric:tabular-nums; }
+.q-grau-anotado b { font-size:9.5px; text-transform:uppercase; letter-spacing:.1em;
+                    color:var(--c-muted); margin-bottom:3px; }
+.q-disclaimer { font-size:10.5px; color:var(--c-muted); line-height:1.5; margin-top:11px;
+                padding-top:11px; border-top:1px solid var(--c-line); }
+.q-resumo { font-size:11.5px; color:var(--c-muted); line-height:1.6; margin-bottom:8px; }
+
+.q-sair, .q-voltar { display:block; text-align:center; font-size:11.5px; color:var(--c-muted);
+                     text-decoration:underline; cursor:pointer; margin-top:12px; }
+.q-sair:hover, .q-voltar:hover { color:var(--c-ink); }
+.q-btn-sub { display:block; font-size:10px; font-weight:500; opacity:.8; margin-top:2px;
+             letter-spacing:.02em; text-transform:none; }
+.q-btn-outline .q-btn-sub { color:var(--c-muted); opacity:1; }
+/* alternativas de lente (bloco que a Maxilook nao usava) */
+.q-alt-titulo { font-size:9.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--c-muted);
+                font-weight:600; margin:16px 0 8px; }
+
     `;
 
 
@@ -811,6 +939,115 @@
                         <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08);"><p style="font-size:12px;color:var(--c-muted);margin:0 0 8px;">Continua com problema? Fale direto com a Provou Levou:</p><a href="https://wa.me/5511965749173?text=Ol%C3%A1!%20Tive%20um%20problema%20ao%20usar%20o%20provador." target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;border-radius:10px;padding:10px 18px;font-family:inherit;font-weight:700;font-size:13px;text-decoration:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.9c0 2.1.55 4.06 1.6 5.8L2 22l4.44-1.65a9.9 9.9 0 0 0 5.6 1.72h.01c5.46 0 9.9-4.45 9.9-9.9C21.95 6.45 17.5 2 12.04 2zm5.8 14.15c-.24.68-1.4 1.3-1.94 1.34-.5.05-1.13.07-1.82-.11-.42-.13-.96-.31-1.65-.61-2.9-1.25-4.8-4.17-4.94-4.36-.15-.19-1.18-1.57-1.18-2.99 0-1.42.75-2.12 1.01-2.41.27-.29.58-.36.77-.36l.55.01c.18.01.42-.07.66.5.24.59.83 2.04.9 2.18.07.15.12.32.02.51-.1.19-.15.31-.29.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.75 1.24 1.62 2.01 1.11.99 2.05 1.3 2.34 1.44.29.15.46.12.63-.07.17-.19.72-.84.91-1.13.19-.29.39-.24.66-.14.27.1 1.7.8 1.99.95.29.15.48.22.55.34.07.12.07.71-.17 1.39z"/></svg> Falar com a Provou Levou</a></div>
                     </div>
 
+
+<!-- ============ ESCOLHER LENTES ============ -->
+<div id="q-step-lentes">
+    <div class="q-passos"><i class="on"></i><i></i><i></i><i></i></div>
+    <span class="q-section-label">Que tipo de lente voc&ecirc; usa?</span>
+    <button class="q-opt" data-visao="simples">
+        <span class="q-opt-t">Vis&atilde;o simples</span>
+        <span class="q-opt-s">Para perto <b>ou</b> para longe</span></button>
+    <button class="q-opt" data-visao="multifocal">
+        <span class="q-opt-t">Multifocal</span>
+        <span class="q-opt-s">Para perto <b>e</b> para longe</span></button>
+    <button class="q-opt" data-visao="descanso">
+        <span class="q-opt-t">Sem grau</span>
+        <span class="q-opt-s">S&oacute; quero o tratamento (descanso)</span></button>
+    <a class="q-sair" data-carrinho="sem">prefiro s&oacute; a arma&ccedil;&atilde;o</a>
+</div>
+
+<div id="q-step-receita">
+    <div class="q-passos"><i class="done"></i><i class="on"></i><i></i><i></i></div>
+    <span class="q-section-label">Qual tratamento voc&ecirc; quer?</span>
+    <button class="q-opt" data-trat="antirreflexo">
+        <span class="q-opt-t">Antirreflexo</span>
+        <span class="q-opt-s">O essencial, para o dia a dia</span></button>
+    <button class="q-opt" data-trat="blue">
+        <span class="q-opt-t">Antirreflexo + Filtro de luz azul</span>
+        <span class="q-opt-s">Para quem passa o dia em telas</span></button>
+    <button class="q-opt" data-trat="fotocromatica">
+        <span class="q-opt-t">Fotocrom&aacute;tica</span>
+        <span class="q-opt-s">Escurece no sol, clareia dentro de casa</span></button>
+    <button class="q-opt" data-trat="fotocromatica_blue">
+        <span class="q-opt-t">Fotocrom&aacute;tica + Filtro de luz azul</span>
+        <span class="q-opt-s">Escurece no sol <b>e</b> protege das telas</span></button>
+    <button class="q-opt" data-trat="nenhum">
+        <span class="q-opt-t">Sem tratamento</span>
+        <span class="q-opt-s">A lente simples, op&ccedil;&atilde;o mais em conta</span></button>
+    <a class="q-voltar" data-ir="q-step-lentes">voltar</a>
+    <a class="q-sair" data-carrinho="sem">prefiro s&oacute; a arma&ccedil;&atilde;o</a>
+</div>
+
+<div id="q-step-upload">
+    <div class="q-passos"><i class="done"></i><i class="done"></i><i class="on"></i><i></i></div>
+    <span class="q-section-label">Agora, sua receita</span>
+    <div class="q-tip-box" style="margin-bottom:16px;">
+        <i class="ph ph-lightbulb"></i>
+        <span>Precisamos do seu grau para indicar a lente certa.</span>
+    </div>
+    <input type="file" id="q-arquivo" accept="image/*,application/pdf" hidden>
+    <button class="q-opt q-opt-destaque" data-receita="whatsapp">
+        <span class="q-opt-t">&#128172; N&atilde;o tenho receita</span>
+        <span class="q-opt-s">Falar com a &oacute;tica no WhatsApp &mdash; a gente te ajuda</span></button>
+    <button class="q-opt" id="q-abrir-arquivo">
+        <span class="q-opt-t">&#128196; Enviar minha receita</span>
+        <span class="q-opt-s">Tire uma foto ou anexe o arquivo &mdash; a gente l&ecirc; pra voc&ecirc;</span></button>
+    <button class="q-opt" data-receita="digitar">
+        <span class="q-opt-t">&#9000; Digitar os dados</span>
+        <span class="q-opt-s">Prefiro preencher os campos eu mesma</span></button>
+
+    <div id="q-lendo" class="q-lendo" hidden>
+        <img id="q-thumb" alt="" hidden>
+        <div class="q-lendo-arq" id="q-arq-nome"></div>
+        <div class="q-spin"></div>
+        <div>Lendo sua receita&hellip;</div>
+    </div>
+    <div id="q-erro-leitura" class="q-erro-leitura" hidden></div>
+
+    <a class="q-voltar" data-ir="q-step-receita">voltar</a>
+    <a class="q-sair" data-carrinho="sem">prefiro s&oacute; a arma&ccedil;&atilde;o</a>
+</div>
+
+<div id="q-step-lente-final">
+    <div class="q-passos"><i class="done"></i><i class="done"></i><i class="done"></i><i class="on"></i></div>
+    <span class="q-section-label" id="q-lente-titulo">Sua receita</span>
+
+    <div id="q-banner-ia" class="q-banner-ia" hidden></div>
+
+    <div id="q-form-receita">
+        <div class="q-olho"><span class="q-olho-tag">Olho direito (OD)</span>
+            <div class="q-olho-campos">
+                <label>Esf&eacute;rico<select data-r="odEsf"></select></label>
+                <label>Cil&iacute;ndrico<select data-r="odCil"></select></label>
+                <label>Eixo<select data-r="odEixo"></select></label>
+            </div></div>
+        <div class="q-olho"><span class="q-olho-tag">Olho esquerdo (OE)</span>
+            <div class="q-olho-campos">
+                <label>Esf&eacute;rico<select data-r="oeEsf"></select></label>
+                <label>Cil&iacute;ndrico<select data-r="oeCil"></select></label>
+                <label>Eixo<select data-r="oeEixo"></select></label>
+            </div></div>
+        <!-- adi&ccedil;&atilde;o: s&oacute; existe em multifocal (o "grau de perto") -->
+        <div class="q-olho" id="q-bloco-adicao" hidden>
+            <span class="q-olho-tag">Adi&ccedil;&atilde;o &mdash; o grau de perto</span>
+            <div class="q-olho-campos" style="grid-template-columns:1fr;">
+                <label>Adi&ccedil;&atilde;o<select data-r="adicao"></select></label>
+            </div>
+        </div>
+        <div id="q-aviso-campo" class="q-erro-leitura" hidden></div>
+        <button class="q-btn-black" id="q-ver-lente" style="margin-top:6px;">VER MINHA LENTE</button>
+    </div>
+
+    <div id="q-resultado-lente" hidden>
+        <div id="q-card-lente" class="q-card-lente"></div>
+        <div id="q-alternativas"></div>
+        <div id="q-resumo-lente" class="q-resumo"></div>
+        <button class="q-btn-black" id="q-add-lente">COMPRAR ARMA&Ccedil;&Atilde;O + LENTE</button>
+        <button class="q-btn-outline" id="q-so-armacao" data-carrinho="sem" style="margin-top:9px;">COMPRAR SOMENTE A ARMA&Ccedil;&Atilde;O</button>
+    </div>
+
+    <a class="q-voltar" data-ir="q-step-upload">voltar</a>
+</div>
                 </div>
                 <a href="https://provoulevou.com.br?utm_source=widget&utm_medium=lojista&utm_campaign=koros" target="_blank" class="q-powered-footer">
                     <span>Powered by</span>
@@ -2036,4 +2273,910 @@ const fd = new FormData();
         else init();
     }
 
+})();
+
+/* ==========================================================================
+   ESCOLHER LENTES — catalogo REAL da Koros (categoria Lentes da loja).
+
+   Diferente da Maxilook: aqui NAO existe tabela de faixas escrita a mao. Cada
+   lente carrega a propria grade de grau, lida da DESCRICAO do produto no site
+   ("Miopia de 0 a -4,50", "Negativo Esferico 0 ate -6,00", ...). Se o lojista
+   corrigir uma descricao ou cadastrar lente nova, e' so regerar este bloco.
+
+   Campos: neg/pos = limite esferico (miopia/hipermetropia), cil = cilindrico,
+   add = adicao (so multifocal). null = a descricao nao declara.
+   Catalogo de 31/08/2026 — 25 lentes.
+   ========================================================================== */
+const LENTES = [
+ {
+  "id": "233823564",
+  "variantId": "1027466887",
+  "nome": "MULTIFOCAL FREE FORM - LIGHT - RESINA + ANTIREFLEXO",
+  "preco": 299.9,
+  "visao": "multifocal",
+  "semgrau": false,
+  "blue": false,
+  "foto": false,
+  "ar": true,
+  "neg": -6.0,
+  "pos": 6.0,
+  "cil": -6.0,
+  "add": 3.5,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-18_28_44-72308d41a5d10b0adb17881253373187-1024-1024.png",
+  "material": "Resina · campo de visão padrão"
+ },
+ {
+  "id": "233824624",
+  "variantId": "1027471616",
+  "nome": "MULTIFOCAL FREE FORM - LIGHT + FOTOSSENSSÍVEL + ANTIREFLEXO",
+  "preco": 479.9,
+  "visao": "multifocal",
+  "semgrau": false,
+  "blue": false,
+  "foto": true,
+  "ar": true,
+  "neg": -6.0,
+  "pos": 6.0,
+  "cil": -6.0,
+  "add": 3.5,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-18_26_50-63a764502691129e9517881255170698-1024-1024.png",
+  "material": "Resina · campo de visão padrão"
+ },
+ {
+  "id": "233812063",
+  "variantId": "1027386011",
+  "nome": "MULTIFOCAL FREE FORM TOP ID - RESINA + ANTI-BLUE + ANTIREFLEXO",
+  "preco": 649.9,
+  "visao": "multifocal",
+  "semgrau": false,
+  "blue": true,
+  "foto": false,
+  "ar": true,
+  "neg": -6.0,
+  "pos": 6.0,
+  "cil": -6.0,
+  "add": 3.5,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/6fed141a-a657-4b6e-acde-3550efc4cd64-e259fd42119d44309f17881247226562-1024-1024.png",
+  "material": "Resina · super campo de visão"
+ },
+ {
+  "id": "233812387",
+  "variantId": "1027387462",
+  "nome": "MULTIFOCAL FREE FORM TOP ID - RESINA + FOTOSSENSSÍVEL + ANTI-BLUE + ANTIREFLEXO",
+  "preco": 849.9,
+  "visao": "multifocal",
+  "semgrau": false,
+  "blue": true,
+  "foto": true,
+  "ar": true,
+  "neg": -6.0,
+  "pos": 6.0,
+  "cil": -6.0,
+  "add": 3.5,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/3a0c9509-e5e4-4f97-993f-0f9b821745b0-b732ac632ccc27e2b617881245909743-1024-1024.png",
+  "material": "Resina · super campo de visão"
+ },
+ {
+  "id": "165006225",
+  "variantId": "1027342870",
+  "nome": "PAR DE LENTES - BÁSICA RESINA + ANTIRREFLEXO",
+  "preco": 99.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": false,
+  "foto": false,
+  "ar": true,
+  "neg": -2.5,
+  "pos": 2.5,
+  "cil": -2.5,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_16_05-3ee67b349e43c53a3c17881211847850-1024-1024.png",
+  "material": "Resina"
+ },
+ {
+  "id": "165005351",
+  "variantId": "1027343406",
+  "nome": "PAR DE LENTES ANTI-BLUE RESINA + ANTIRREFLEXO",
+  "preco": 159.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": true,
+  "foto": false,
+  "ar": true,
+  "neg": -2.5,
+  "pos": 2.5,
+  "cil": -2.5,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_24_54-12010b7ce475dd504f17881215027430-1024-1024.png",
+  "material": "Resina"
+ },
+ {
+  "id": "233790933",
+  "variantId": "1027320258",
+  "nome": "PAR DE LENTES SEM GRAU - ANTI-BLUE + ANTIREFLEXO",
+  "preco": 159.9,
+  "visao": "simples",
+  "semgrau": true,
+  "blue": true,
+  "foto": false,
+  "ar": true,
+  "neg": null,
+  "pos": null,
+  "cil": null,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_17_20-159ea1b181e8558eae17881211015894-1024-1024.png",
+  "material": "Resina"
+ },
+ {
+  "id": "164994445",
+  "variantId": "622909310",
+  "nome": "PAR DE LENTES - BÁSICA - KODAK INTRO 1.56",
+  "preco": 189.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": false,
+  "foto": false,
+  "ar": true,
+  "neg": -2.5,
+  "pos": 2.5,
+  "cil": -2.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-e5a2e182f95941ba9417275214073037-1024-1024.png",
+  "material": "Resina 1.56"
+ },
+ {
+  "id": "165005716",
+  "variantId": "1027348786",
+  "nome": "PAR DE LENTES ANTI-BLUE POLI + ANTIRREFLEXO",
+  "preco": 199.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": true,
+  "foto": false,
+  "ar": true,
+  "neg": -4.0,
+  "pos": 4.0,
+  "cil": -4.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_32_16-acf4a63b6b188ea80717881219631665-1024-1024.png",
+  "material": "Policarbonato"
+ },
+ {
+  "id": "165006644",
+  "variantId": "622954211",
+  "nome": "PAR DE LENTES - BÁSICA POLICARBONATO + ANTIRREFLEXO",
+  "preco": 199.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": false,
+  "foto": false,
+  "ar": true,
+  "neg": -4.0,
+  "pos": 4.0,
+  "cil": -4.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/chatgpt-image-30-de-ago-de-2026-17_27_21-346a75bdcadc0cfc2617881221645766-1024-1024.png",
+  "material": "Policarbonato"
+ },
+ {
+  "id": "165017587",
+  "variantId": "1027356779",
+  "nome": "PAR DE LENTES - RESINA FOTO + ANTI BLUE + AR - ESCURECE NO SOL",
+  "preco": 199.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": true,
+  "foto": true,
+  "ar": true,
+  "neg": -2.5,
+  "pos": 2.5,
+  "cil": -2.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/be36f879-91a7-439a-a295-e2ef1fb334f1-2427527c876cd9864517881233702483-1024-1024.png",
+  "material": "Resina"
+ },
+ {
+  "id": "164995212",
+  "variantId": "622912331",
+  "nome": "PAR DE LENTES - BÁSICA - KODAK INTRO POLY",
+  "preco": 209.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": false,
+  "foto": false,
+  "ar": true,
+  "neg": -4.5,
+  "pos": 4.0,
+  "cil": -2.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-3f1ad48b2dc27af69c17275215451210-1024-1024.png",
+  "material": "Resina"
+ },
+ {
+  "id": "164995565",
+  "variantId": "690619033",
+  "nome": "PAR DE LENTES - KODAK BLUE RESINA",
+  "preco": 209.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": true,
+  "foto": false,
+  "ar": true,
+  "neg": -2.5,
+  "pos": 2.5,
+  "cil": -2.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-4c038197da56d825fa17275214431218-1024-1024.png",
+  "material": "Resina"
+ },
+ {
+  "id": "164995831",
+  "variantId": "622913733",
+  "nome": "PAR DE LENTES - KODAK BLUE POLY",
+  "preco": 279.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": true,
+  "foto": false,
+  "ar": true,
+  "neg": -4.5,
+  "pos": 4.0,
+  "cil": -2.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-7893fb1e1c0c22ee5d17275215666880-1024-1024.png",
+  "material": "Resina"
+ },
+ {
+  "id": "165005940",
+  "variantId": "622950251",
+  "nome": "PAR DE LENTES - ANTI - BLUE + ANTIREFLEXO 1.67 - GRAU ALTO",
+  "preco": 299.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": true,
+  "foto": false,
+  "ar": true,
+  "neg": -7.0,
+  "pos": 6.0,
+  "cil": -4.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/bf4a5924-b5e6-42b3-b5d9-4cdd3ad40a68-2ea12b309b214f723417881225265664-1024-1024.png",
+  "material": "Resina 1.67"
+ },
+ {
+  "id": "165043836",
+  "variantId": "690620022",
+  "nome": "PAR DE LENTES - KODAK CITY 1.56 Ar + FILTRO AZUL - MAIS COMPLETA DA LINHA",
+  "preco": 299.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": true,
+  "foto": false,
+  "ar": true,
+  "neg": -2.5,
+  "pos": 2.5,
+  "cil": -2.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-4ae2fb03b86be8bf1417275215188587-1024-1024.png",
+  "material": "Resina 1.56"
+ },
+ {
+  "id": "165018270",
+  "variantId": "1027369102",
+  "nome": "PAR DE LENTES - POLI FOTO + AR",
+  "preco": 349.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": false,
+  "foto": true,
+  "ar": true,
+  "neg": -4.0,
+  "pos": 4.0,
+  "cil": -4.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/12b43403-9b08-40e9-a1fa-b70936204a9d-4e0a681ab2c07b736417881238842622-1024-1024.png",
+  "material": "Policarbonato"
+ },
+ {
+  "id": "165044312",
+  "variantId": "690620163",
+  "nome": "PAR DE LENTES - KODAK CITY POLY Ar + FILTRO AZUL",
+  "preco": 469.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": true,
+  "foto": false,
+  "ar": true,
+  "neg": -4.5,
+  "pos": 4.0,
+  "cil": -2.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t080302-233-25b6fcec341478e00b17275215945823-1024-1024.png",
+  "material": "Resina"
+ },
+ {
+  "id": "164996132",
+  "variantId": "1027378268",
+  "nome": "PAR DE LENTES - 1.67 ASFÉRICA FOTOSSENSSÍVEL COM ANTIREFLEXO - GRAU ALTO",
+  "preco": 499.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": false,
+  "foto": true,
+  "ar": true,
+  "neg": -7.0,
+  "pos": 6.0,
+  "cil": -4.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/5c54a368-d08e-4f52-b0cc-e6f333c505cb-cd817dc33df3d2e87c17881229328363-1024-1024.png",
+  "material": "Resina 1.67"
+ },
+ {
+  "id": "165004260",
+  "variantId": "690619270",
+  "nome": "PAR DE LENTES - ORMA ( RESINA) CRIZALROCK - MAIS RESISTÊNCIA",
+  "preco": 499.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": false,
+  "foto": false,
+  "ar": true,
+  "neg": -2.5,
+  "pos": 2.5,
+  "cil": -2.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t075326-127-c97a84f3d2e864196d17275208911959-1024-1024.png",
+  "material": "Resina"
+ },
+ {
+  "id": "165004934",
+  "variantId": "690619356",
+  "nome": "PAR DE LENTES - AIRWEAR (POLY) CRIZALROCK - MAIS RESISTÊNCIA",
+  "preco": 649.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": false,
+  "foto": false,
+  "ar": true,
+  "neg": -4.5,
+  "pos": 4.0,
+  "cil": -2.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/design-sem-nome-2024-09-28t075326-127-976b33a224ffe1269117275208540968-1024-1024.png",
+  "material": "Policarbonato"
+ },
+ {
+  "id": "165002430",
+  "variantId": "1027361274",
+  "nome": "PAR DE LENTES TRANSITIONS ORMA - TECNOLOGIA GEN 8 - ESCURECE COM MAIS INTENSIDADE",
+  "preco": 779.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": false,
+  "foto": true,
+  "ar": true,
+  "neg": -2.5,
+  "pos": 2.5,
+  "cil": -2.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/0c85cbb5-104c-4dce-86bb-5c1b7954e7e8-774abb35c7074cbf4a17881236136847-1024-1024.png",
+  "material": "Resina"
+ },
+ {
+  "id": "164996275",
+  "variantId": "1027373203",
+  "nome": "PAR DE LENTES 1.74 ANTI-BLUE + ANTIREFLEXO - ULTRA FINA - GRAU ALTÍSSIMO",
+  "preco": 899.9,
+  "visao": "simples",
+  "semgrau": false,
+  "blue": true,
+  "foto": false,
+  "ar": true,
+  "neg": -10.0,
+  "pos": null,
+  "cil": -3.0,
+  "add": null,
+  "img": "https://acdn-us.mitiendanube.com/stores/002/506/781/products/7892f109-b032-4d69-9144-325970909266-be7dc1fe8e152e0bf817881226753232-1024-1024.png",
+  "material": "Resina 1.74"
+ }
+];
+
+function piorOlho(a, b) { return Math.abs(a) >= Math.abs(b) ? a : b; }
+
+/** Esferico com sinal, cilindrico em modulo. Sem receita = zerado. */
+function grau(receita) {
+  if (!receita) return { esf: 0, cil: 0, add: null };
+  return {
+    esf: piorOlho(Number(receita.odEsf) || 0, Number(receita.oeEsf) || 0),
+    cil: Math.max(Math.abs(Number(receita.odCil) || 0), Math.abs(Number(receita.oeCil) || 0)),
+    add: receita.adicao != null ? Number(receita.adicao) : null
+  };
+}
+
+/** A lente cobre esse grau? (ignoraTrat = so a grade, sem olhar tratamento) */
+function serveLente(l, visao, trat, g, ignoraTrat) {
+  if (l.semgrau) return false;
+  if (l.visao !== visao) return false;
+  if (!ignoraTrat) {
+    if (trat === 'antirreflexo'       && (l.blue || l.foto)) return false;
+    if (trat === 'blue'               && (!l.blue || l.foto)) return false;
+    if (trat === 'fotocromatica'      && (!l.foto || l.blue)) return false;
+    if (trat === 'fotocromatica_blue' && (!l.foto || !l.blue)) return false;
+  }
+  if (g.esf < 0) { if (l.neg == null || g.esf < l.neg) return false; }
+  if (g.esf > 0) { if (l.pos == null || g.esf > l.pos) return false; }
+  if (g.cil > 0) { if (l.cil == null || g.cil > Math.abs(l.cil)) return false; }
+  if (visao === 'multifocal' && g.add != null) { if (l.add == null || g.add > l.add) return false; }
+  return true;
+}
+
+/**
+ * @returns {{lente, porque, temAstig, outras}}  indicacao
+ *        | {fora:'grau'|'tratamento', outras}   -> otica / alternativas
+ */
+function recomendar(e) {
+  const g = grau(e.receita);
+  if (e.visao === 'descanso') {
+    const sg = LENTES.filter(l => l.semgrau).sort((a, b) => a.preco - b.preco)[0];
+    return sg ? { lente: sg, temAstig: false, outras: [],
+                  porque: 'Sem grau, so o tratamento — para descansar a vista das telas.' }
+              : { fora: 'sem_produto', outras: [] };
+  }
+  const visao = e.visao;
+  // cabe = so a grade; pedido = grade + o tratamento escolhido.
+  const cabe   = LENTES.filter(l => serveLente(l, visao, e.trat, g, true)).sort((a, b) => a.preco - b.preco);
+  const pedido = cabe.filter(l => serveLente(l, visao, e.trat, g, false));
+  if (!cabe.length)   return { fora: 'grau', outras: [] };
+  if (!pedido.length) return { fora: 'tratamento', outras: cabe };
+  const lente = pedido[0];
+  const outras = cabe.filter(l => l !== lente);
+  return { lente, temAstig: g.cil > 0, outras, porque: porque(e.trat, g, lente) };
+}
+
+/** Explica com base na escolha e no grau — sem prometer o que e' da otica. */
+function porque(trat, g, l) {
+  const p = [];
+  if (trat === 'fotocromatica' || trat === 'fotocromatica_blue') p.push('escurece no sol e clareia dentro de casa');
+  else p.push('com antirreflexo');
+  if (trat === 'blue' || trat === 'fotocromatica_blue') p.push('filtra a luz azul das telas');
+  if (g.cil > 0) p.push('e atende o seu astigmatismo');
+  return 'Seu grau esta na faixa que a gente monta pronto. Esta lente vem ' + p.join(', ') + '.';
+}
+
+if (typeof window !== 'undefined') { window.LENTES = LENTES; window.recomendar = recomendar; }
+if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau, serveLente }; }
+
+
+/* =====================================================================
+   ESCOLHER LENTES — controlador de PRODUCAO (injetado no widget-maxilook.js)
+   Aditivo: nao toca no provador existente. Aparece como um botao a mais
+   na tela de resultado. Rastreia cada passo em pl-lentes-step.
+
+   PILOTO (order bump do Cashing ainda ligado): o botao final adiciona
+   SO A ARMACAO (mesmo POST /comprar/ do widget). A lente recomendada e
+   registrada, mas nao vai pro carrinho ainda — senao dobraria com o bump.
+   Quando a Jam desligar o bump, troca FASE_CARRINHO_LENTE para true.
+   ===================================================================== */
+(function () {
+    if (window.__PL_LENTES_LOADED__) return;
+    window.__PL_LENTES_LOADED__ = true;
+
+    var FASE_CARRINHO_LENTE = true;    // o order bump nao auto-adiciona (testado) -> pode add a lente
+    var WHATSAPP_LOJA = '5524999222210';   // WhatsApp da Koros (esta na descricao das lentes)
+    var WEBHOOK_RECEITA = 'https://n8n.segredosdodrop.com/webhook/pl-ler-receita';
+    var WEBHOOK_STEP = 'https://n8n.segredosdodrop.com/webhook/pl-lentes-step';
+
+    var $ = function (s) { return document.querySelector(s); };
+    var $$ = function (s) { return [].slice.call(document.querySelectorAll(s)); };
+    var brl = function (v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); };
+
+    var st = { visao: null, trat: null, receita: null, lente: null, ultimo: 'abriu' };
+
+    /* ---------- rastreamento (fire-and-forget) ---------- */
+    function plSid() {
+        try {
+            var s = localStorage.getItem('pl_sid');
+            if (!s) { s = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); localStorage.setItem('pl_sid', s); }
+            return s;
+        } catch (e) { return 'nostore'; }
+    }
+    function track(step, detail) {
+        st.ultimo = step;
+        try {
+            var tel = (document.getElementById('q-phone') || {}).value || '';
+            var prod = (document.getElementById('q-result-prodname') || {}).textContent
+                || (document.querySelector('h1.product-title,h1.product-detail-info-name,h1') || {}).innerText
+                || document.title || '';
+            fetch(WEBHOOK_STEP, {
+                method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: plSid(), origin: location.origin, telefone: tel,
+                    step: step, produto: (prod || '').trim().slice(0, 180), detail: detail || {}
+                })
+            }).catch(function () { });
+        } catch (e) { }
+    }
+
+    /* ---------- armacao (lida da tela de resultado real) ---------- */
+    function armacao() {
+        var nome = (document.getElementById('q-result-prodname') || {}).textContent
+            || (document.querySelector('h1.product-title,h1.product-detail-info-name,h1') || {}).innerText || 'Armação';
+        var precoTxt = (document.getElementById('q-result-prodprice') || {}).textContent || '';
+        var m = precoTxt.match(/[\d.,]+/);
+        var preco = m ? Number(m[0].replace(/\./g, '').replace(',', '.')) : 0;
+        return { nome: (nome || '').trim(), preco: preco };
+    }
+
+    /* ---------- navegacao entre telas do fluxo ---------- */
+    var TELAS = ['q-step-lentes', 'q-step-receita', 'q-step-upload', 'q-step-lente-final'];
+    function ir(id) {
+        // esconde as telas do fluxo E a tela de resultado do provador
+        TELAS.forEach(function (t) { var el = document.getElementById(t); if (el) el.style.display = 'none'; });
+        var res = document.getElementById('q-step-result'); if (res) res.style.display = 'none';
+        var alvo = document.getElementById(id);
+        if (alvo) alvo.style.display = 'flex';
+        var sc = $('.q-content-scroll'); if (sc) sc.scrollTop = 0;
+    }
+    function voltarResultado() {
+        TELAS.forEach(function (t) { var el = document.getElementById(t); if (el) el.style.display = 'none'; });
+        var res = document.getElementById('q-step-result'); if (res) res.style.display = 'flex';
+    }
+
+    /* ---------- selects da receita ---------- */
+    function faixa(de, ate, passo) {
+        var o = ['<option value="">—</option>'];
+        for (var v = de; v <= ate + 0.001; v += passo) {
+            var s = (v > 0 ? '+' : '') + v.toFixed(2).replace('.', ',');
+            o.push('<option value="' + v.toFixed(2) + '">' + s + '</option>');
+        }
+        return o.join('');
+    }
+    function popular() {
+        $$('[data-r$="Esf"]').forEach(function (s) { s.innerHTML = faixa(-12, 7, 0.25); });
+        $$('[data-r$="Cil"]').forEach(function (s) { s.innerHTML = faixa(-6, 0, 0.25); s.value = '0.00'; });
+        $$('[data-r="odEixo"],[data-r="oeEixo"]').forEach(function (s) {
+            var o = ['<option value="">—</option>'];
+            for (var v = 0; v <= 180; v++) o.push('<option value="' + v + '">' + v + '°</option>');
+            s.innerHTML = o.join('');
+        });
+        var ad = $('[data-r="adicao"]'); if (ad) ad.innerHTML = faixa(0.75, 3.50, 0.25);
+    }
+    function mostrarAdicao() { var b = $('#q-bloco-adicao'); if (b) b.hidden = (st.visao !== 'multifocal'); }
+    function limparReceita() { $$('[data-r]').forEach(function (s) { s.value = /Cil$/.test(s.dataset.r) ? '0.00' : ''; }); }
+    function avisar(msg) { var el = $('#q-aviso-campo'); el.textContent = msg; el.hidden = false; el.scrollIntoView({ block: 'nearest' }); }
+
+    function lerCampos() {
+        var g = function (k) { var el = $('[data-r="' + k + '"]'); return el && el.value !== '' ? Number(el.value) : null; };
+        var r = { odEsf: g('odEsf'), odCil: g('odCil'), odEixo: g('odEixo'), oeEsf: g('oeEsf'), oeCil: g('oeCil'), oeEixo: g('oeEixo') };
+        if (r.odEsf === null || r.oeEsf === null) return { falta: 'esferico' };
+        r.odCil = r.odCil || 0; r.oeCil = r.oeCil || 0;
+        if (st.visao === 'multifocal') { r.adicao = g('adicao'); if (r.adicao === null) return { falta: 'adicao' }; }
+        return { receita: r };
+    }
+
+    var TRAT_LABEL = { antirreflexo: 'Antirreflexo', blue: 'Antirreflexo + luz azul', fotocromatica: 'Fotossensível', fotocromatica_blue: 'Fotossensível + luz azul' };
+    var MOTIVO = {
+        multifocal: 'Lente multifocal a gente monta sob medida pra cada pessoa.',
+        esferico: 'Seu grau está acima do que deixamos pronto no site.',
+        cilindrico: 'Seu astigmatismo está acima do que deixamos pronto no site.',
+        tratamento: 'Esse tratamento a gente não deixa pronto pro seu grau.',
+        sem_produto: 'Essa combinação a gente monta sob medida.'
+    };
+
+    function resumoDoGrau() {
+        var r = st.receita; if (!r) return '';
+        var s = function (v) { return (v > 0 ? '+' : '') + Number(v).toFixed(2).replace('.', ','); };
+        var olho = function (esf, cil, eixo) { return s(esf) + (Number(cil) ? ' ' + s(cil) + (eixo != null ? ' ' + eixo + '&deg;' : '') : ''); };
+        return '<div class="q-grau-anotado"><b>o que a ótica recebeu</b>' +
+            '<span>OD ' + olho(r.odEsf, r.odCil, r.odEixo) + '</span>' +
+            '<span>OE ' + olho(r.oeEsf, r.oeCil, r.oeEixo) + '</span>' +
+            (r.adicao != null ? '<span>Adição ' + s(r.adicao) + '</span>' : '') + '</div>';
+    }
+
+    function pintarCard(l, porque) {
+        $('#q-card-lente').innerHTML =
+            (l.img ? '<img class="q-lente-foto" src="' + l.img + '" alt="" decoding="async">' : '') +
+            '<div class="q-card-lente-nome">' + l.nome + '</div>' +
+            '<div class="q-card-lente-mat">' + l.material + '</div>' +
+            '<div class="q-card-lente-preco">' + brl(l.preco) + '</div>' +
+            '<div class="q-card-lente-parc">ou 6x de ' + brl(l.preco / 6) + ' sem juros</div>' +
+            (porque ? '<div class="q-card-lente-pq"><b>por que essa lente</b>' + porque + '</div>' : '') +
+            '<div class="q-disclaimer">Indicação com base no que você escolheu, ' +
+            '<strong>conferida pela nossa ótica</strong> antes da montagem.</div>';
+    }
+
+    function mostrarLente(rec) {
+        if (!rec || rec.fora) {
+            st.lente = null;
+            $('#q-card-lente').innerHTML =
+                '<div class="q-card-lente-nome">Sua lente sai sob medida</div>' +
+                '<div class="q-card-lente-mat">' + (MOTIVO[rec && rec.fora] || MOTIVO.sem_produto) + '</div>' +
+                '<div class="q-card-lente-pq"><b>o que acontece agora</b>' +
+                'Leve a armação — <strong>seu grau já está anotado aqui</strong>. ' +
+                'A nossa ótica te chama no WhatsApp com o valor da sua lente, sem custo a mais pela consulta.</div>' +
+                resumoDoGrau();
+            $('#q-resumo-lente').textContent = '';
+            $('#q-add-lente').textContent = 'LEVAR A ARMAÇÃO E FALAR COM A ÓTICA';
+            var so1 = $('#q-so-armacao'); if (so1) so1.style.display = 'none';   // sem lente: um botao so
+            track('recomendou', { fora: (rec && rec.fora) || 'sem_produto', visao: st.visao, trat: st.trat });
+        } else {
+            st.lente = rec.lente;
+            pintarCard(rec.lente, rec.porque);
+            var tipo = ({ simples: 'Visão simples', multifocal: 'Multifocal', descanso: 'Sem grau' })[st.visao];
+            $('#q-resumo-lente').innerHTML = 'Você escolheu: ' + tipo + ' &middot; ' + (TRAT_LABEL[st.trat] || '—') +
+                (rec.temAstig ? ' &middot; <strong>com astigmatismo</strong>' : '');
+            $('#q-add-lente').textContent = FASE_CARRINHO_LENTE ? 'COMPRAR ARMAÇÃO + LENTE' : 'COMPRAR ARMAÇÃO';
+            var so2 = $('#q-so-armacao'); if (so2) so2.style.display = FASE_CARRINHO_LENTE ? 'flex' : 'none';
+            track('recomendou', { lente: rec.lente.nome, preco: rec.lente.preco, faixa: rec.faixa, visao: st.visao, trat: st.trat });
+        }
+        // Outras lentes que atendem o mesmo grau. A Maxilook nunca preencheu este bloco
+        // (uma faixa = uma lente por tratamento); na Koros varias servem, entao mostrar as
+        // alternativas evita esconder tanto a mais barata quanto a mais completa.
+        var alt = $('#q-alternativas');
+        if (alt) {
+            var _o = (rec && rec.outras) || [];
+            alt.innerHTML = _o.length
+                ? '<div class="q-alt-titulo">Outras que também servem para o seu grau</div>' + _o.map(function (l) {
+                    return '<button type="button" class="q-opt q-opt-lente" data-lente="' + l.id + '">'
+                        + (l.img ? '<img class="q-opt-foto" src="' + l.img + '" alt="" loading="lazy">' : '')
+                        + '<span class="q-opt-txt"><span class="q-opt-t">' + l.nome + '</span>'
+                        + '<span class="q-opt-s">' + brl(l.preco) + ' &middot; ' + l.material + '</span></span></button>';
+                  }).join('')
+                : '';
+        }
+        $('#q-form-receita').hidden = true;
+        $('#q-resultado-lente').hidden = false;
+        $('#q-lente-titulo').textContent = 'Sua lente indicada';
+        ir('q-step-lente-final');
+    }
+
+    function recomendarAgora() {
+        mostrarLente(window.recomendar({ visao: st.visao, trat: st.trat, receita: st.receita }));
+    }
+
+    function abrirFormReceita(titulo, banner) {
+        $('#q-form-receita').hidden = false;
+        $('#q-aviso-campo').hidden = true;
+        mostrarAdicao();
+        $('#q-resultado-lente').hidden = true;
+        $('#q-lente-titulo').textContent = titulo;
+        var b = $('#q-banner-ia');
+        if (banner) { b.hidden = false; b.innerHTML = banner; } else { b.hidden = true; }
+        ir('q-step-lente-final');
+    }
+
+    /* ---------- adiciona SO A ARMACAO ao carrinho (mesmo POST do widget) ---------- */
+    function getProductForm() {
+        var f = document.querySelector('form[action*="carrinho"], form[action*="comprar"], form.js-product-form, form[data-store="product-form"]');
+        if (f && f.querySelector('input[name="add_to_cart"]')) return f;
+        var inp = document.querySelector('input[name="add_to_cart"]');
+        return inp ? inp.closest('form') : null;
+    }
+    function comprarArmacao() {
+        var src = getProductForm();
+        if (src) {
+            var clone = document.createElement('form');
+            clone.method = 'post';
+            clone.action = src.getAttribute('action') || '/comprar/';
+            clone.style.display = 'none';
+            src.querySelectorAll('input, select, textarea').forEach(function (el) {
+                if (!el.name) return;
+                if ((el.type === 'checkbox' || el.type === 'radio') && !el.checked) return;
+                var h = document.createElement('input');
+                h.type = 'hidden'; h.name = el.name; h.value = el.value;
+                clone.appendChild(h);
+            });
+            if (!clone.querySelector('[name="quantity"]')) {
+                var q = document.createElement('input'); q.type = 'hidden'; q.name = 'quantity'; q.value = '1'; clone.appendChild(q);
+            }
+            document.body.appendChild(clone); clone.submit(); return true;
+        }
+        var sb = document.querySelector('.js-addtocart, .btn-add-to-cart, [data-component="product.add-to-cart"]');
+        if (sb) { try { sb.click(); return true; } catch (e) { } }
+        return false;
+    }
+
+    /* ---------- cliques do fluxo ---------- */
+    document.addEventListener('click', function (e) {
+        var t = e.target.closest('[data-ir],[data-visao],[data-trat],[data-receita],[data-carrinho],' +
+            '#q-btn-escolher-lentes,#q-abrir-arquivo,#q-ver-lente,#q-add-lente');
+        if (!t) return;
+
+        if (t.id === 'q-btn-escolher-lentes') { e.preventDefault(); track('abriu', {}); ir('q-step-lentes'); return; }
+        if (t.dataset.ir) { e.preventDefault(); if (t.dataset.ir === 'q-step-result') voltarResultado(); else ir(t.dataset.ir); return; }
+
+        if (t.dataset.visao) {
+            e.preventDefault(); st.visao = t.dataset.visao; track('visao', { visao: st.visao });
+            if (st.visao === 'descanso') { st.trat = 'blue'; st.receita = null; recomendarAgora(); }
+            else ir('q-step-receita');
+            return;
+        }
+        if (t.dataset.trat) { e.preventDefault(); st.trat = t.dataset.trat; track('tratamento', { visao: st.visao, trat: st.trat }); ir('q-step-upload'); return; }
+
+        if (t.id === 'q-abrir-arquivo') { e.preventDefault(); track('receita_metodo', { metodo: 'enviar' }); $('#q-arquivo').click(); return; }
+        if (t.dataset.receita === 'digitar') { e.preventDefault(); track('receita_metodo', { metodo: 'digitar' }); limparReceita(); abrirFormReceita('Digite sua receita', null); return; }
+        if (t.dataset.receita === 'whatsapp') {
+            e.preventDefault();
+            track('sem_receita_whatsapp', { visao: st.visao, trat: st.trat });
+            var prod = (document.getElementById('q-result-prodname') || {}).textContent
+                || (document.querySelector('h1.product-title,h1') || {}).innerText || '';
+            var msg = 'Olá! Não tenho minha receita e quero ajuda pra escolher a lente'
+                + (prod ? (' do ' + prod.trim()) : '') + '.';
+            window.open('https://wa.me/' + WHATSAPP_LOJA + '?text=' + encodeURIComponent(msg), '_blank');
+            return;
+        }
+
+        if (t.id === 'q-ver-lente') {
+            e.preventDefault();
+            var r = lerCampos();
+            if (r.falta === 'esferico') { avisar('Preencha o esférico dos dois olhos.'); return; }
+            if (r.falta === 'adicao') { avisar('Preencha a adição — ela é o grau de perto da multifocal.'); return; }
+            st.receita = r.receita; recomendarAgora(); return;
+        }
+
+        if (t.dataset.carrinho === 'sem') { e.preventDefault(); track('so_armacao', { visao: st.visao }); comprarArmacao(); return; }
+
+        var _optLente = t.closest && t.closest('.q-opt-lente');
+        if (_optLente) {
+            e.preventDefault();
+            var _id = _optLente.getAttribute('data-lente');
+            var _l = LENTES.filter(function (x) { return x.id === _id; })[0];
+            if (_l) {
+                st.lente = _l;
+                pintarCard(_l, 'Você escolheu esta opção.');
+                track('trocou_lente', { lente: _l.nome, preco: _l.preco });
+            }
+            return;
+        }
+        if (t.id === 'q-add-lente') {
+            e.preventDefault();
+            if (st.lente && FASE_CARRINHO_LENTE) {
+                track('carrinho', { lente: st.lente.nome, preco: st.lente.preco, fase: 'armacao_mais_lente' });
+                comprarComLente(st.lente);   // adiciona armação + lente
+            } else {
+                // fora da faixa (sem lente) ou fase desligada: só a armação
+                track('so_armacao', { visao: st.visao, motivo: 'sem_lente' });
+                comprarArmacao();
+            }
+            return;
+        }
+    });
+
+    /* Adiciona a LENTE (product id) e a ARMAÇÃO ao carrinho, e leva pro carrinho.
+       add_to_cart usa o PRODUCT id (nao o variant) — validado na loja. */
+    function comprarComLente(lente) {
+        var body = 'add_to_cart=' + encodeURIComponent(lente.id) + '&quantity=1';
+        // primeiro a lente (fetch, sem sair da pagina); depois a armação (form, redireciona pro carrinho)
+        fetch('/comprar/', {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body
+        }).then(function () { comprarArmacao(); })
+          .catch(function () { comprarArmacao(); });   // se a lente falhar, ao menos leva a armação
+    }
+
+    /* ---------- leitura REAL da receita (n8n -> Gemini vision) ---------- */
+    function encaixar(sel, valor) {
+        if (!sel || valor == null) return;
+        var opts = [].slice.call(sel.options).map(function (o) { return o.value; }).filter(function (v) { return v !== ''; });
+        var melhor = opts[0], dif = Infinity;
+        opts.forEach(function (o) { var d = Math.abs(Number(o) - Number(valor)); if (d < dif) { dif = d; melhor = o; } });
+        sel.value = melhor;
+    }
+
+    function wireArquivo() {
+        var inp = $('#q-arquivo'); if (!inp) return;
+        inp.addEventListener('change', function (e) { var f = e.target.files && e.target.files[0]; if (f) lerReceitaDoArquivo(f); });
+    }
+
+    function lerReceitaDoArquivo(file) {
+        $('#q-erro-leitura').hidden = true;
+        $('#q-lendo').hidden = false;
+        $('#q-arq-nome').textContent = file.name;
+        var th = $('#q-thumb');
+        if (/^image\//.test(file.type)) { th.src = URL.createObjectURL(file); th.hidden = false; th.onload = function () { URL.revokeObjectURL(th.src); }; }
+        else { th.hidden = true; }
+
+        var fr = new FileReader();
+        fr.onload = function () {
+            var b64 = String(fr.result).split(',')[1];
+            fetch(WEBHOOK_RECEITA, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: b64, mime: file.type || 'image/png' }) })
+                .then(function (resp) { return resp.json(); })
+                .then(function (r) {
+                    if (!r.ok) { track('receita_lida', { ok: false, erro: r.erro }); falhaLeitura(r.erro === 'nao_e_receita' ? 'Não identifiquei uma receita nessa imagem.' : 'Não consegui ler sua receita.'); return; }
+                    var d = r.dados;
+                    encaixar($('[data-r="odEsf"]'), d.odEsf); encaixar($('[data-r="oeEsf"]'), d.oeEsf);
+                    encaixar($('[data-r="odCil"]'), d.odCil); encaixar($('[data-r="oeCil"]'), d.oeCil);
+                    if (d.adicao != null) encaixar($('[data-r="adicao"]'), d.adicao);
+                    if (d.odEixo != null) $('[data-r="odEixo"]').value = String(Math.round(d.odEixo));
+                    if (d.oeEixo != null) $('[data-r="oeEixo"]').value = String(Math.round(d.oeEixo));
+                    $('#q-lendo').hidden = true;
+                    track('receita_lida', { ok: true, confianca: d.confianca });
+                    abrirFormReceita('Confira sua receita', d.confianca === 'baixa'
+                        ? '&#9888;&#65039; A imagem ficou difícil de ler. <strong>Confira cada número com atenção.</strong>'
+                        : '&#10024; Preenchemos com o que lemos na sua receita. <strong>Confira e corrija se precisar.</strong>');
+                })
+                .catch(function () { track('receita_lida', { ok: false, erro: 'conexao' }); falhaLeitura('A leitura falhou — pode ser a conexão.'); });
+        };
+        fr.onerror = function () { falhaLeitura('Não consegui abrir o arquivo.'); };
+        fr.readAsDataURL(file);
+    }
+
+    function falhaLeitura(msg) {
+        $('#q-lendo').hidden = true;
+        var box = $('#q-erro-leitura');
+        box.innerHTML = msg + ' Tente outra foto ou <a data-receita="digitar">digite os dados</a>.';
+        box.hidden = false;
+    }
+
+    /* ---------- mostra ESCOLHER LENTES quando a tela de resultado aparece ---------- */
+    function revelarBotao() {
+        var buy = document.getElementById('q-btn-buy-now');
+        var lentes = document.getElementById('q-btn-escolher-lentes');
+        if (!buy || !lentes) return;
+        var visivel = buy.style.display && buy.style.display !== 'none';
+        lentes.style.display = visivel ? 'flex' : 'none';
+    }
+
+    /* ---------- botao "ESCOLHER LENTES E COMPRAR" na pagina do produto ---------- */
+    function abrirFluxoDoProduto(e) {
+        if (e) e.preventDefault();
+        var modal = document.getElementById('q-modal-ia'); if (modal) modal.style.display = 'flex';
+        try { document.body.style.overflow = 'hidden'; } catch (_) { }
+        // abre direto no fluxo de lentes: esconde as telas do provador (foto/resultado/pix/erro)
+        ['q-step-photo', 'q-step-pix', 'q-step-error'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
+        st.ultimo = 'abriu';
+        track('abriu', { origem: 'botao_produto' });
+        ir('q-step-lentes');
+    }
+    function inserirBotaoProduto() {
+        var buys = document.querySelectorAll('.js-addtocart, .btn-add-to-cart, [data-component="product.add-to-cart"]');
+        var achou = false;
+        buys.forEach(function (buy) {
+            if (!buy.parentNode || buy.parentNode.querySelector('.q-btn-lentes-produto')) return;
+            achou = true;
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'q-btn-lentes-produto';
+            b.textContent = 'ESCOLHER LENTES E COMPRAR';
+            b.addEventListener('click', abrirFluxoDoProduto);
+            buy.parentNode.insertBefore(b, buy.nextSibling);
+            // Provador Virtual como ULTIMO botao: move ele pra depois do "ESCOLHER LENTES E COMPRAR"
+            var inline = buy.parentNode.querySelector('.q-btn-inline-provador');
+            if (inline) buy.parentNode.insertBefore(inline, b.nextSibling);
+        });
+        return achou;
+    }
+
+    /* ---------- init ---------- */
+    function init() {
+        popular();
+        wireArquivo();
+        // botao na pagina do produto (abaixo do comprar); tenta ate o botao de compra existir
+        if (!inserirBotaoProduto()) {
+            var t = 0, iv = setInterval(function () { if (inserirBotaoProduto() || ++t > 20) clearInterval(iv); }, 300);
+        }
+        // observa o botao de compra do provador pra espelhar a visibilidade
+        var buy = document.getElementById('q-btn-buy-now');
+        if (buy) {
+            var obs = new MutationObserver(revelarBotao);
+            obs.observe(buy, { attributes: true, attributeFilter: ['style'] });
+            revelarBotao();
+        }
+        // 'saiu' quando fecham o provador no meio do fluxo
+        var close = document.getElementById('q-close-btn');
+        if (close) close.addEventListener('click', function () {
+            if (st.ultimo && st.ultimo !== 'abriu' && st.ultimo !== 'carrinho' && st.ultimo !== 'so_armacao')
+                track('saiu', { ultimo_step: st.ultimo });
+        });
+    }
+
+    // espera o provador montar as telas de lente (injetadas no html do widget)
+    var _tentativas = 0;
+    function bootstrap() {
+        if (document.getElementById('q-btn-escolher-lentes') && document.getElementById('q-arquivo')) { init(); return; }
+        if (_tentativas++ > 60) return;   // ~9s de tolerancia
+        setTimeout(bootstrap, 150);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootstrap);
+    else bootstrap();
 })();
