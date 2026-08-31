@@ -972,9 +972,6 @@
     <button class="q-opt" data-trat="fotocromatica_blue">
         <span class="q-opt-t">Fotocrom&aacute;tica + Filtro de luz azul</span>
         <span class="q-opt-s">Escurece no sol <b>e</b> protege das telas</span></button>
-    <button class="q-opt" data-trat="nenhum">
-        <span class="q-opt-t">Sem tratamento</span>
-        <span class="q-opt-s">A lente simples, op&ccedil;&atilde;o mais em conta</span></button>
     <a class="q-voltar" data-ir="q-step-lentes">voltar</a>
     <a class="q-sair" data-carrinho="sem">prefiro s&oacute; a arma&ccedil;&atilde;o</a>
 </div>
@@ -2847,6 +2844,30 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
     }
 
     /* ---------- navegacao entre telas do fluxo ---------- */
+
+    /* So oferece o tratamento que a loja tem para aquela visao. Ex.: nas multifocais
+       da Koros as duas fotossensiveis vem com anti-blue, entao "Fotossensivel" sozinho
+       levaria a um beco ("sob medida, fale com a otica"). Le do catalogo, nao e' regra
+       escrita: se o lojista cadastrar a lente que falta, a opcao volta sozinha. */
+    function tratamentosDisponiveis(visao) {
+        var TESTES = {
+            antirreflexo:       function (l) { return !l.blue && !l.foto; },
+            blue:               function (l) { return l.blue && !l.foto; },
+            fotocromatica:      function (l) { return l.foto && !l.blue; },
+            fotocromatica_blue: function (l) { return l.foto && l.blue; }
+        };
+        var doTipo = LENTES.filter(function (l) { return l.visao === visao && !l.semgrau; });
+        var ok = {};
+        Object.keys(TESTES).forEach(function (k) { ok[k] = doTipo.some(TESTES[k]); });
+        return ok;
+    }
+    function pintarTratamentos(visao) {
+        var ok = tratamentosDisponiveis(visao);
+        $$('#q-step-receita [data-trat]').forEach(function (b) {
+            b.style.display = ok[b.dataset.trat] ? 'flex' : 'none';
+        });
+    }
+
     var TELAS = ['q-step-lentes', 'q-step-receita', 'q-step-upload', 'q-step-lente-final'];
     function ir(id) {
         // esconde as telas do fluxo E a tela de resultado do provador
@@ -3027,7 +3048,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         if (t.dataset.visao) {
             e.preventDefault(); st.visao = t.dataset.visao; track('visao', { visao: st.visao });
             if (st.visao === 'descanso') { st.trat = 'blue'; st.receita = null; recomendarAgora(); }
-            else ir('q-step-receita');
+            else { pintarTratamentos(st.visao); ir('q-step-receita'); }
             return;
         }
         if (t.dataset.trat) { e.preventDefault(); st.trat = t.dataset.trat; track('tratamento', { visao: st.visao, trat: st.trat }); ir('q-step-upload'); return; }
