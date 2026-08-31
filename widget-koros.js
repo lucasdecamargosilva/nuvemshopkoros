@@ -702,12 +702,14 @@
         #q-so-armacao:hover { opacity: .88; }
         /* botao ESCOLHER LENTES E COMPRAR na PAGINA DO PRODUTO (abaixo do comprar) */
         .q-btn-lentes-produto {
-            width: 100%; margin-top: 10px; padding: 14px 16px; box-sizing: border-box;
-            display: block; text-align: center;
+            /* margem EMBAIXO: o botao fica acima do COMPRAR, entao o respiro separa os dois */
+            width: 100%; margin: 10px 0 16px; padding: 14px 16px; box-sizing: border-box;
+            display: flex; align-items: center; justify-content: center; gap: 9px;
             background: #F39C12; color: #fff; border: none; border-radius: 0;
             font-family: 'Work Sans', var(--font-body), sans-serif; font-size: 11px; font-weight: 700;
             letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: opacity .2s;
         }
+        .q-btn-lentes-produto svg { width: 17px; height: 17px; flex-shrink: 0; }
         .q-btn-lentes-produto:hover { opacity: .9; }
 
 /* atributo hidden manda: sem isso, classes com display:flex (.q-lendo etc.)
@@ -3271,7 +3273,12 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             var b = document.createElement('button');
             b.type = 'button';
             b.className = 'q-btn-lentes-produto';
-            b.textContent = 'ESCOLHER LENTES E COMPRAR';
+            b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" '
+                + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                + '<circle cx="6" cy="14" r="3.4"/><circle cx="18" cy="14" r="3.4"/>'
+                + '<path d="M9.4 14c.6-1 1.5-1.5 2.6-1.5s2 .5 2.6 1.5"/>'
+                + '<path d="M2.6 14V11.6c0-.7.4-1.3 1-1.6"/><path d="M21.4 14V11.6c0-.7-.4-1.3-1-1.6"/>'
+                + '</svg><span>ESCOLHER LENTES E COMPRAR</span>';
             b.addEventListener('click', abrirFluxoDoProduto);
             // Ordem pedida: ESCOLHER LENTES > COMPRAR > PROVADOR. Entao o botao entra ACIMA
             // da linha de compra do form REAL (que fica abaixo das variacoes). A barra fixa
