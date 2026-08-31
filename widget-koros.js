@@ -3241,10 +3241,13 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             b.className = 'q-btn-lentes-produto';
             b.textContent = 'ESCOLHER LENTES E COMPRAR';
             b.addEventListener('click', abrirFluxoDoProduto);
-            buy.parentNode.insertBefore(b, buy.nextSibling);
-            // Provador Virtual como ULTIMO botao: move ele pra depois do "ESCOLHER LENTES E COMPRAR"
-            var inline = buy.parentNode.querySelector('.q-btn-inline-provador');
-            if (inline) buy.parentNode.insertBefore(inline, b.nextSibling);
+            // ESCOLHER LENTES fica LOGO ABAIXO do botao do provador (pedido do Lucas em
+            // 31/08/2026). Na Koros o provador entra ACIMA da linha de compra, e ele pode
+            // estar em outro pai que o botao de comprar — por isso a busca e' no documento,
+            // com o botao de compra como plano B.
+            var inline = document.querySelector('.q-btn-inline-provador-real, .q-btn-inline-provador');
+            if (inline && inline.parentNode) inline.parentNode.insertBefore(b, inline.nextSibling);
+            else buy.parentNode.insertBefore(b, buy.nextSibling);
         });
         return achou;
     }
@@ -3257,6 +3260,17 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         if (!inserirBotaoProduto()) {
             var t = 0, iv = setInterval(function () { if (inserirBotaoProduto() || ++t > 20) clearInterval(iv); }, 300);
         }
+        // O botao do provador as vezes entra DEPOIS (o tema re-renderiza a linha de compra).
+        // Reancora algumas vezes para o ESCOLHER LENTES nao ficar acima dele.
+        [600, 1800, 4000].forEach(function (ms) {
+            setTimeout(function () {
+                var inline = document.querySelector('.q-btn-inline-provador-real, .q-btn-inline-provador');
+                var lentes = document.querySelector('.q-btn-lentes-produto');
+                if (inline && lentes && inline.nextSibling !== lentes && inline.parentNode) {
+                    inline.parentNode.insertBefore(lentes, inline.nextSibling);
+                }
+            }, ms);
+        });
         // observa o botao de compra do provador pra espelhar a visibilidade
         var buy = document.getElementById('q-btn-buy-now');
         if (buy) {
