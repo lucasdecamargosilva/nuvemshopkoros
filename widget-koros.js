@@ -2894,6 +2894,23 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         if (alvo) alvo.style.display = 'flex';
         var sc = $('.q-content-scroll'); if (sc) sc.scrollTop = 0;
     }
+
+    /* O provador e o fluxo de lentes moram no MESMO modal e cada um esconde so as
+       proprias telas. Quem abria o fluxo pelo botao do produto e depois clicava no
+       provador via as duas coisas empilhadas: a foto em cima e o fluxo de lentes logo
+       abaixo. Aqui, sempre que a tela da foto do provador reaparece, o fluxo se recolhe.
+       Observa o style em vez de amarrar no clique: cobre todos os jeitos de abrir. */
+    function _vigiaProvador() {
+        var foto = document.getElementById('q-step-photo');
+        if (!foto) return;
+        var esconde = function () {
+            if (foto.style.display === 'none') return;
+            TELAS.forEach(function (t) { var el = document.getElementById(t); if (el) el.style.display = 'none'; });
+        };
+        new MutationObserver(esconde).observe(foto, { attributes: true, attributeFilter: ['style'] });
+        esconde();
+    }
+
     function voltarResultado() {
         TELAS.forEach(function (t) { var el = document.getElementById(t); if (el) el.style.display = 'none'; });
         var res = document.getElementById('q-step-result'); if (res) res.style.display = 'flex';
@@ -3327,6 +3344,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         // Reancora algumas vezes para o ESCOLHER LENTES nao ficar acima dele.
         // O tema re-renderiza a linha de compra: reancora algumas vezes.
         [600, 1800, 4000].forEach(function (ms) { setTimeout(inserirBotaoProduto, ms); });
+        _vigiaProvador();
         // observa o botao de compra do provador pra espelhar a visibilidade
         var buy = document.getElementById('q-btn-buy-now');
         if (buy) {
