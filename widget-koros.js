@@ -1030,6 +1030,20 @@
     <a class="q-sair" data-carrinho="sem">prefiro s&oacute; a arma&ccedil;&atilde;o</a>
 </div>
 
+<div id="q-step-lentes-tel">
+    <div class="q-passos"><i class="done"></i><i class="done"></i><i class="done"></i><i class="on"></i></div>
+    <span class="q-section-label">Para onde enviamos sua indica&ccedil;&atilde;o?</span>
+    <div class="q-tip-box" style="margin-bottom:16px;">
+        <i class="ph ph-lightbulb"></i>
+        <span>Guardamos sua escolha de lente e te ajudamos pelo WhatsApp se precisar.</span>
+    </div>
+    <input type="tel" id="q-lentes-tel" class="q-input" placeholder="(11) 99999-9999" maxlength="15" inputmode="numeric">
+    <div id="q-lentes-tel-erro" class="q-status-msg" style="display:none;"></div>
+    <button class="q-opt q-opt-destaque" id="q-lentes-tel-ok" style="margin-top:16px;">
+        <span class="q-opt-t">Ver minha lente</span></button>
+    <a class="q-sair" id="q-lentes-tel-pular">prefiro n&atilde;o informar</a>
+</div>
+
 <div id="q-step-lente-final">
     <div class="q-passos"><i class="done"></i><i class="done"></i><i class="done"></i><i class="on"></i></div>
     <span class="q-section-label" id="q-lente-titulo">Sua receita</span>
@@ -2897,7 +2911,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         });
     }
 
-    var TELAS = ['q-step-lentes', 'q-step-receita', 'q-step-upload', 'q-step-lente-final'];
+    var TELAS = ['q-step-lentes', 'q-step-receita', 'q-step-upload', 'q-step-lentes-tel', 'q-step-lente-final'];
     function ir(id) {
         // esconde as telas do fluxo E a tela de resultado do provador
         TELAS.forEach(function (t) { var el = document.getElementById(t); if (el) el.style.display = 'none'; });
@@ -3037,8 +3051,89 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
     }
 
     function recomendarAgora() {
-        mostrarLente(window.recomendar({ visao: st.visao, trat: st.trat, receita: st.receita }));
+        pedeTelefone(function () {
+            mostrarLente(window.recomendar({ visao: st.visao, trat: st.trat, receita: st.receita }));
+        });
     }
+
+    /* ---------- WhatsApp: so pede quando o provador nao deixou nenhum ---------- */
+    var _telPendente = null;   // o que fazer depois que a pessoa responder
+
+    function telAtual() {
+        var v = (document.getElementById('q-phone') || {}).value || '';
+        var d = v.replace(/[^0-9]/g, '');
+        if (d.length >= 10) return d;
+        try {
+            var g = localStorage.getItem('pl_last_phone') || '';
+            if (g.replace(/[^0-9]/g, '').length >= 10) return g.replace(/[^0-9]/g, '');
+        } catch (e) { }
+        return '';
+    }
+
+    function telValido(d) {
+        if (!/^\d{10,11}$/.test(d)) return 'Informe DDD + n\u00famero';
+        if (!/^[1-9][1-9]/.test(d)) return 'DDD inv\u00e1lido';
+        if (d.length === 11 && d[2] !== '9') return 'Celular deve come\u00e7ar com 9 ap\u00f3s o DDD';
+        if (/^(\d)\1+$/.test(d.length === 11 ? d.slice(3) : d.slice(2))) return 'N\u00famero n\u00e3o parece real';
+        return null;
+    }
+
+    function telMascara(d) {
+        d = d.slice(0, 11);
+        if (d.length <= 2) return d.length ? '(' + d : '';
+        var meio = d.length === 11 ? 7 : 6;
+        return '(' + d.slice(0, 2) + ') ' + d.slice(2, meio) + (d.length > meio ? '-' + d.slice(meio) : '');
+    }
+
+    /* Guarda onde o track() ja procura, para nao existir uma segunda fonte de verdade. */
+    function telGuarda(d) {
+        var inp = document.getElementById('q-phone');
+        if (inp && !inp.value.replace(/[^0-9]/g, '')) inp.value = telMascara(d);
+        try { localStorage.setItem('pl_last_phone', d); } catch (e) { }
+    }
+
+    /* Roda 'depois' direto se ja temos numero; senao abre a tela e espera. */
+    function pedeTelefone(depois) {
+        if (telAtual()) { depois(); return; }
+        _telPendente = depois;
+        var inp = document.getElementById('q-lentes-tel');
+        var err = document.getElementById('q-lentes-tel-erro');
+        if (err) err.style.display = 'none';
+        if (inp) inp.value = '';
+        track('pediu_telefone', {});
+        ir('q-step-lentes-tel');
+        if (inp) setTimeout(function () { try { inp.focus(); } catch (e) { } }, 250);
+    }
+
+    function telSegue(informou) {
+        var f = _telPendente; _telPendente = null;
+        if (f) f();
+        if (!informou) track('telefone_pulado', {});
+    }
+
+    function wireTelefone() {
+        var inp = document.getElementById('q-lentes-tel');
+        var err = document.getElementById('q-lentes-tel-erro');
+        var ok = document.getElementById('q-lentes-tel-ok');
+        var pular = document.getElementById('q-lentes-tel-pular');
+        if (!inp || !ok) return;
+        inp.addEventListener('input', function () {
+            inp.value = telMascara(inp.value.replace(/[^0-9]/g, ''));
+            if (err) err.style.display = 'none';
+        });
+        inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); ok.click(); } });
+        ok.addEventListener('click', function (e) {
+            e.preventDefault();
+            var d = inp.value.replace(/[^0-9]/g, '');
+            var msg = telValido(d);
+            if (msg) { if (err) { err.textContent = msg; err.style.display = 'block'; } return; }
+            telGuarda(d);
+            track('telefone', { origem: 'fluxo_lentes' });
+            telSegue(true);
+        });
+        if (pular) pular.addEventListener('click', function (e) { e.preventDefault(); telSegue(false); });
+    }
+
 
     function abrirFormReceita(titulo, banner) {
         $('#q-form-receita').hidden = false;
@@ -3364,6 +3459,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
     function init() {
         popular();
         wireArquivo();
+        wireTelefone();
         // botao na pagina do produto (abaixo do comprar); tenta ate o botao de compra existir
         if (!inserirBotaoProduto()) {
             var t = 0, iv = setInterval(function () { if (inserirBotaoProduto() || ++t > 20) clearInterval(iv); }, 300);
