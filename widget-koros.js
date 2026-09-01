@@ -711,6 +711,18 @@
             letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: opacity .2s;
         }
         .q-btn-lentes-produto svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+        /* Barra fixa do scroll: tira estreita — botoes menores que na pagina */
+        .q-btn-lentes-produto.q-btn-lentes-compacto {
+            height: 34px !important; margin: 4px 0 6px; padding: 0 10px;
+            font-size: 9.5px; letter-spacing: 1px; gap: 6px;
+        }
+        .q-btn-lentes-produto.q-btn-lentes-compacto svg { width: 13px; height: 13px; }
+        .q-btn-inline-provador.q-btn-provador-compacto {
+            height: 34px; margin: 6px 0 4px; font-size: 11.5px;
+        }
+        .q-btn-inline-provador.q-btn-provador-compacto svg { width: 12px; height: 12px; }
+
         .q-btn-lentes-produto:hover { opacity: .9; }
 
 /* atributo hidden manda: sem isso, classes com display:flex (.q-lendo etc.)
@@ -3308,13 +3320,23 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             if (linha && linha.parentNode && linhas.indexOf(linha) === -1) linhas.push(linha);
         });
         if (!linhas.length) return false;
+        var linhaFixa = fixo ? ((fixo.closest && fixo.closest('.form-row')) || fixo) : null;
         linhas.forEach(function (linha) {
             if (!linha.getAttribute('data-pl-lentes')) {
                 linha.setAttribute('data-pl-lentes', '1');
-                linha.parentNode.insertBefore(_botaoLentes(), linha);   // ACIMA do comprar
+                var b = _botaoLentes();
+                // Barra fixa do scroll: versao compacta. La o espaco e' uma tira estreita e
+                // os botoes em tamanho de pagina ficavam enormes.
+                if (linha === linhaFixa) b.classList.add('q-btn-lentes-compacto');
+                linha.parentNode.insertBefore(b, linha);   // ACIMA do comprar
             }
             _igualaAltura(linha);
         });
+        // o provador da barra fixa tambem encolhe
+        if (linhaFixa) {
+            var pv = linhaFixa.parentNode.querySelector('.q-btn-inline-provador:not(.q-btn-inline-provador-real)');
+            if (pv) pv.classList.add('q-btn-provador-compacto');
+        }
         return true;
     }
 
@@ -3328,6 +3350,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             if (!lentes || !lentes.classList.contains('q-btn-lentes-produto')) return;
             var alvo = linha.querySelector('.js-addtocart, .btn-add-to-cart, [data-component="product.add-to-cart"]') || linha;
             var h = Math.round(alvo.getBoundingClientRect().height);
+            if (lentes.classList.contains('q-btn-lentes-compacto')) return;   // compacto tem altura propria
             if (h > 20) { lentes.style.height = h + 'px'; lentes.style.padding = '0 16px'; }
         } catch (e) {}
     }
