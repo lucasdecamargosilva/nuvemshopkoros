@@ -3238,10 +3238,15 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         if (/^image\//.test(file.type)) { th.src = URL.createObjectURL(file); th.hidden = false; th.onload = function () { URL.revokeObjectURL(th.src); }; }
         else { th.hidden = true; }
 
+        // Caminho do arquivo no bucket privado 'receitas'. Sai daqui (e nao do n8n)
+        // porque o funil precisa gravar esse mesmo caminho pro painel achar depois.
+        var ext = (String(file.type || '').split('/')[1] || 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 5) || 'jpg';
+        var caminho = plSid() + '/' + Date.now() + '.' + ext;
+
         var fr = new FileReader();
         fr.onload = function () {
             var b64 = String(fr.result).split(',')[1];
-            fetch(WEBHOOK_RECEITA, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: b64, mime: file.type || 'image/png' }) })
+            fetch(WEBHOOK_RECEITA, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: b64, mime: file.type || 'image/png', path: caminho }) })
                 .then(function (resp) { return resp.json(); })
                 .then(function (r) {
                     if (!r.ok) { track('receita_lida', { ok: false, erro: r.erro }); falhaLeitura(r.erro === 'nao_e_receita' ? 'Não identifiquei uma receita nessa imagem.' : 'Não consegui ler sua receita.'); return; }
@@ -3252,7 +3257,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
                     if (d.odEixo != null) $('[data-r="odEixo"]').value = String(Math.round(d.odEixo));
                     if (d.oeEixo != null) $('[data-r="oeEixo"]').value = String(Math.round(d.oeEixo));
                     $('#q-lendo').hidden = true;
-                    track('receita_lida', { ok: true, confianca: d.confianca });
+                    track('receita_lida', { ok: true, confianca: d.confianca, arq: caminho });
                     abrirFormReceita('Confira sua receita', d.confianca === 'baixa'
                         ? '&#9888;&#65039; A imagem ficou difícil de ler. <strong>Confira cada número com atenção.</strong>'
                         : '&#10024; Preenchemos com o que lemos na sua receita. <strong>Confira e corrija se precisar.</strong>');
