@@ -730,7 +730,7 @@
 #q-modal-ia [hidden] { display: none !important; }
 
 /* ===== fluxo ESCOLHER LENTES (mesma linguagem visual do provador) ===== */
-#q-step-lentes, #q-step-receita, #q-step-upload, #q-step-lente-final {
+#q-step-lentes, #q-step-receita, #q-step-upload, #q-step-lentes-tel, #q-step-lente-final {
     display: none; flex-direction: column; padding: 26px 28px 30px; gap: 0;
 }
 .q-passos { display:flex; gap:5px; margin-bottom:20px; }
