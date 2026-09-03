@@ -3279,8 +3279,14 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         if (e) e.preventDefault();
         var modal = document.getElementById('q-modal-ia'); if (modal) modal.style.display = 'flex';
         try { document.body.style.overflow = 'hidden'; } catch (_) { }
-        // abre direto no fluxo de lentes: esconde as telas do provador (foto/resultado/pix/erro)
-        ['q-step-photo', 'q-step-pix', 'q-step-error'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
+        // abre direto no fluxo de lentes: esconde TODAS as telas do provador
+        // (foto/resultado/loading/pix/erro). O resultado, no desktop, e' mostrado
+        // por CSS via .is-result no card (display:flex !important) — entao alem de
+        // esconder inline e' preciso remover essa classe, senao o resultado do
+        // provador continua aparecendo junto com o fluxo de lentes.
+        var _card = document.querySelector('.q-card-ia');
+        if (_card) _card.classList.remove('is-result');
+        ['q-step-photo', 'q-step-result', 'q-loading-box', 'q-step-pix', 'q-step-error'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
         st.ultimo = 'abriu';
         track('abriu', { origem: 'botao_produto' });
         ir('q-step-lentes');
