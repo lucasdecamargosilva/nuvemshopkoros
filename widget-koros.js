@@ -1041,8 +1041,8 @@
 </div>
 
 <div id="q-step-lentes-tel">
-    <div class="q-passos"><i class="done"></i><i class="done"></i><i class="done"></i><i class="on"></i></div>
-    <span class="q-section-label">Para onde enviamos sua indica&ccedil;&atilde;o?</span>
+    <div class="q-passos"><i class="on"></i><i></i><i></i><i></i></div>
+    <span class="q-section-label">Qual &eacute; o seu WhatsApp?</span>
     <div class="q-tip-box" style="margin-bottom:16px;">
         <i class="ph ph-lightbulb"></i>
         <span>Guardamos sua escolha de lente e te ajudamos pelo WhatsApp se precisar.</span>
@@ -1050,8 +1050,7 @@
     <input type="tel" id="q-lentes-tel" class="q-input" placeholder="(11) 99999-9999" maxlength="15" inputmode="numeric">
     <div id="q-lentes-tel-erro" class="q-status-msg" style="display:none;"></div>
     <button class="q-opt q-opt-destaque" id="q-lentes-tel-ok" style="margin-top:16px;text-align:center;align-items:center;">
-        <span class="q-opt-t">Ver minha lente</span></button>
-    <a class="q-sair" id="q-lentes-tel-pular">prefiro n&atilde;o informar</a>
+        <span class="q-opt-t">Continuar</span></button>
 </div>
 
 <div id="q-step-lente-final">
@@ -3063,15 +3062,12 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
     }
 
     function recomendarAgora() {
-        pedeTelefone(function () {
-            mostrarLente(window.recomendar({ visao: st.visao, trat: st.trat, receita: st.receita }));
-        });
+        mostrarLente(window.recomendar({ visao: st.visao, trat: st.trat, receita: st.receita }));
     }
 
-    /* ---------- WhatsApp: so pede quando o provador nao deixou nenhum ---------- */
+    /* ---------- WhatsApp: primeira etapa obrigatoria do fluxo de lentes ---------- */
     var _telPendente = null;   // o que fazer depois que a pessoa responder
-    // So pede WhatsApp quando o fluxo abriu pelo botao da PAGINA DO PRODUTO.
-    // Pelo provador o WhatsApp ja foi capturado antes — nao pede de novo.
+    // Se o provador ja capturou um numero valido, reaproveita sem pedir de novo.
     var _entrouPeloProduto = false;
 
     function telAtual() {
@@ -3109,7 +3105,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
 
     /* Roda 'depois' direto se ja temos numero; senao abre a tela e espera. */
     function pedeTelefone(depois) {
-        if (!_entrouPeloProduto || telAtual()) { depois(); return; }
+        if (telAtual()) { depois(); return; }
         _telPendente = depois;
         var inp = document.getElementById('q-lentes-tel');
         var err = document.getElementById('q-lentes-tel-erro');
@@ -3130,7 +3126,6 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         var inp = document.getElementById('q-lentes-tel');
         var err = document.getElementById('q-lentes-tel-erro');
         var ok = document.getElementById('q-lentes-tel-ok');
-        var pular = document.getElementById('q-lentes-tel-pular');
         if (!inp || !ok) return;
         inp.addEventListener('input', function () {
             inp.value = telMascara(inp.value.replace(/[^0-9]/g, ''));
@@ -3146,7 +3141,6 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             track('telefone', { origem: 'fluxo_lentes' });
             telSegue(true);
         });
-        if (pular) pular.addEventListener('click', function (e) { e.preventDefault(); telSegue(false); });
     }
 
 
@@ -3198,7 +3192,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             '[data-lente],#q-btn-escolher-lentes,#q-abrir-arquivo,#q-ver-lente,#q-add-lente');
         if (!t) return;
 
-        if (t.id === 'q-btn-escolher-lentes') { e.preventDefault(); _entrouPeloProduto = false; track('abriu', { origem: 'provador' }); ir('q-step-lentes'); return; }
+        if (t.id === 'q-btn-escolher-lentes') { e.preventDefault(); _entrouPeloProduto = false; track('abriu', { origem: 'provador' }); pedeTelefone(function () { ir('q-step-lentes'); }); return; }
         if (t.dataset.ir) { e.preventDefault(); if (t.dataset.ir === 'q-step-result') voltarResultado(); else ir(t.dataset.ir); return; }
 
         if (t.dataset.visao) {
@@ -3410,7 +3404,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         st.ultimo = 'abriu';
         _entrouPeloProduto = true;
         track('abriu', { origem: 'botao_produto' });
-        ir('q-step-lentes');
+        pedeTelefone(function () { ir('q-step-lentes'); });
     }
     function _botaoLentes() {
         var b = document.createElement('button');
