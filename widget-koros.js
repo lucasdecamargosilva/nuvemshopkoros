@@ -790,9 +790,19 @@
 .q-lente-foto { width:100%; max-width:190px; height:auto; display:block; margin:0 auto 13px;
                 border-radius:10px; background:var(--c-surface); }
 .q-opt-lente { flex-direction:row; align-items:center; gap:12px; }
+.q-opt-lente.is-selected { border-color:var(--c-ink); background:var(--c-surface);
+                           box-shadow:0 0 0 1px var(--c-ink); }
+.q-opt-selected { display:none; margin-left:auto; flex-shrink:0; border-radius:999px;
+                  padding:4px 8px; background:var(--c-ink); color:var(--c-bg);
+                  font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+.q-opt-lente.is-selected .q-opt-selected { display:inline-flex; }
 .q-opt-foto  { width:52px; height:52px; object-fit:cover; border-radius:9px; flex-shrink:0;
                background:var(--c-surface); }
 .q-opt-txt   { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.q-card-lente-status { display:inline-flex; align-items:center; border-radius:999px;
+                       padding:5px 9px; margin-bottom:11px; background:var(--c-ink);
+                       color:var(--c-bg); font-size:9px; font-weight:700;
+                       letter-spacing:.08em; text-transform:uppercase; }
 .q-card-lente-nome { font-size:14px; font-weight:600; line-height:1.35; }
 .q-card-lente-mat  { font-size:11px; color:var(--c-muted); margin:3px 0 11px; }
 .q-card-lente-preco{ font-size:27px; font-weight:700; }
@@ -2995,6 +3005,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
 
     function pintarCard(l, porque) {
         $('#q-card-lente').innerHTML =
+            '<div class="q-card-lente-status">Lente selecionada</div>' +
             (l.img ? '<img class="q-lente-foto" src="' + l.img + '" alt="" decoding="async">' : '') +
             '<div class="q-card-lente-nome">' + l.nome + '</div>' +
             '<div class="q-card-lente-mat">' + l.material + '</div>' +
@@ -3037,10 +3048,11 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             var _o = (rec && rec.outras) || [];
             alt.innerHTML = _o.length
                 ? '<div class="q-alt-titulo">Outras opções com o mesmo tratamento</div>' + _o.map(function (l) {
-                    return '<button type="button" class="q-opt q-opt-lente" data-lente="' + l.id + '">'
+                    return '<button type="button" class="q-opt q-opt-lente" data-lente="' + l.id + '" aria-pressed="false">'
                         + (l.img ? '<img class="q-opt-foto" src="' + l.img + '" alt="" loading="lazy">' : '')
                         + '<span class="q-opt-txt"><span class="q-opt-t">' + l.nome + '</span>'
-                        + '<span class="q-opt-s">' + brl(l.preco) + ' &middot; ' + l.material + '</span></span></button>';
+                        + '<span class="q-opt-s">' + brl(l.preco) + ' &middot; ' + l.material + '</span></span>'
+                        + '<span class="q-opt-selected">Selecionada</span></button>';
                   }).join('')
                 : '';
         }
@@ -3183,7 +3195,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
     /* ---------- cliques do fluxo ---------- */
     document.addEventListener('click', function (e) {
         var t = e.target.closest('[data-ir],[data-visao],[data-trat],[data-receita],[data-carrinho],' +
-            '#q-btn-escolher-lentes,#q-abrir-arquivo,#q-ver-lente,#q-add-lente');
+            '[data-lente],#q-btn-escolher-lentes,#q-abrir-arquivo,#q-ver-lente,#q-add-lente');
         if (!t) return;
 
         if (t.id === 'q-btn-escolher-lentes') { e.preventDefault(); _entrouPeloProduto = false; track('abriu', { origem: 'provador' }); ir('q-step-lentes'); return; }
@@ -3232,6 +3244,12 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             var _l = LENTES.filter(function (x) { return x.id === _id; })[0];
             if (_l) {
                 st.lente = _l;
+                $$('.q-opt-lente').forEach(function (el) {
+                    el.classList.remove('is-selected');
+                    el.setAttribute('aria-pressed', 'false');
+                });
+                _optLente.classList.add('is-selected');
+                _optLente.setAttribute('aria-pressed', 'true');
                 pintarCard(_l, 'Você escolheu esta opção.');
                 track('trocou_lente', { lente: _l.nome, preco: _l.preco });
             }
