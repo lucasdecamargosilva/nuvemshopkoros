@@ -2255,28 +2255,28 @@ const fd = new FormData();
                             }
                         }
                     } catch (_) {}
-                    // A foto no rosto sempre vai primeiro; em seguida entram os packshots e
-                    // outras vistas da armação. Se a galeria não tiver rosto ou a detecção não
-                    // estiver disponível, mantém a ordem original sem bloquear a geração.
+                    // Regra exclusiva da Koros: envia SOMENTE fotos em que a armação aparece
+                    // no rosto. Packshots e vistas isoladas não podem entrar como referência.
+                    var faceOnlyImgs = [];
                     try {
                         if (!faceDetectPromise) startFaceDetect();
                         if (faceDetectPromise) await Promise.race([faceDetectPromise, new Promise(function (r) { setTimeout(r, 4000); })]);
                         if (_faceUrls && _faceUrls.length) {
                             var imageKey = function (u) { return String(u || '').split('?')[0]; };
-                            var faceKeys = {};
-                            _faceUrls.forEach(function (u) { faceKeys[imageKey(u)] = true; });
-                            var ordered = [];
                             var addImage = function (u) {
-                                if (u && !ordered.some(function (x) { return imageKey(x) === imageKey(u); })) ordered.push(u);
+                                if (u && !faceOnlyImgs.some(function (x) { return imageKey(x) === imageKey(u); })) faceOnlyImgs.push(u);
                             };
-                            addImage(_faceUrls[0]);
-                            allProdImgs.filter(function (u) { return !faceKeys[imageKey(u)]; }).forEach(addImage);
-                            _faceUrls.slice(1).forEach(addImage);
-                            allProdImgs.forEach(addImage);
-                            allProdImgs = ordered;
+                            _faceUrls.forEach(addImage);
                         }
                     } catch (_) {}
-                    allProdImgs = allProdImgs.slice(0, 4);
+                    allProdImgs = faceOnlyImgs.slice(0, 4);
+                    if (!allProdImgs.length) {
+                        try { document.getElementById('q-loading-box').style.display = 'none'; } catch (_) {}
+                        try { uploadStep.style.display = 'block'; } catch (_) {}
+                        try { genBtn.disabled = false; } catch (_) {}
+                        alert('Não encontramos uma foto deste óculos no rosto. Tente novamente em alguns segundos.');
+                        return;
+                    }
                     console.log('[PL Koros] Enviando', allProdImgs.length, 'fotos do produto');
                     for (let _pi = 0; _pi < allProdImgs.length; _pi++) {
                         try {
