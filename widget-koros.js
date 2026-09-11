@@ -2227,6 +2227,7 @@ const fd = new FormData();
                     fd.append('product_url', window.location.href);
                     fd.append('product_type', currentProduct.category);
                     fd.append('product_fit', currentProduct.fit);
+                    fd.append('reference_mode', 'face_only_v2');
                     fd.append('api_key', keyToUse);
                     if (pixPaymentId) fd.append('pix_payment_id', pixPaymentId);
 
