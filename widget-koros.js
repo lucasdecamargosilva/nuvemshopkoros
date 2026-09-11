@@ -1509,7 +1509,7 @@
             return src;
         }
 
-        function extractImages() {
+        function extractImages(limit) {
             const containersSelectors = '.js-product-slide, .product-image-column, .js-swiper-product, [data-store^="product-image-"], .product__media-wrapper, .product-gallery__media, .product__media, .product-image-main, .product-media-container, [data-media-id], .product__media-item, .product-gallery, .product-single__media, .media-gallery, [data-component="product.gallery"], .swiper-slide:not(.swiper-slide-duplicate), .slider-wrapper';
             const possibleContainers = Array.from(document.querySelectorAll(containersSelectors));
             let imgEls = [];
@@ -1567,7 +1567,7 @@
                 }
             }
 
-            return uniqueImgs.slice(0, 4);
+            return uniqueImgs.slice(0, Number(limit) > 0 ? Number(limit) : 4);
         }
 
         function populateImageSelector() {
@@ -1582,7 +1582,70 @@
         function plSid() { try { var s = localStorage.getItem('pl_sid'); if (!s) { s = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); localStorage.setItem('pl_sid', s); } return s; } catch (e) { return 'nostore'; } }
         function plTrackOpen() { try { fetch(WEBHOOK_OPEN_PL, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: plSid(), origin: location.origin, botao: window.__plBtnSrc || null, produto: (document.querySelector('h1.product-name, h1.product__title, .product-single__title, h1') || {}).innerText || document.title || '' }) }).catch(function () {}); } catch (e) {} }
         function plTrackProved(rawPhone) { try { var d = (rawPhone || '').replace(/\D/g, ''); if (d.length > 11 && d.slice(0, 2) === '55') d = d.slice(2); fetch(WEBHOOK_OPEN_PL, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: plSid(), proved: true, telefone_cliente: d || null }) }).catch(function () {}); } catch (e) {} }
+
+        // Detecta fotos da galeria em que o óculos está no rosto de uma pessoa.
+        // Essa imagem sempre vira a primeira referência enviada ao gerador, pois define
+        // com muito mais precisão o tamanho e a proporção reais da armação no rosto.
+        var faceDetectPromise = null, _faceUrls = [], _faceDet = null, _faceDetTried = false;
+        async function getFaceDetector() {
+            if (_faceDetTried) return _faceDet;
+            _faceDetTried = true;
+            try {
+                if ('FaceDetector' in window) {
+                    _faceDet = { native: new window.FaceDetector({ fastMode: true, maxDetectedFaces: 1 }) };
+                    return _faceDet;
+                }
+            } catch (e) {}
+            try {
+                var vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/vision_bundle.mjs');
+                var fileset = await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm');
+                var det = await vision.FaceDetector.createFromOptions(fileset, {
+                    baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite' },
+                    runningMode: 'IMAGE'
+                });
+                _faceDet = { mp: det };
+            } catch (e) { _faceDet = null; }
+            return _faceDet;
+        }
+        function _plLoadCorsImg(url) {
+            return new Promise(function (resolve) {
+                var img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = function () { resolve(img); };
+                img.onerror = function () { resolve(null); };
+                img.src = url;
+            });
+        }
+        async function _plImgHasFace(det, img) {
+            try {
+                if (det.native) { var f = await det.native.detect(img); return !!(f && f.length); }
+                if (det.mp) { var r = det.mp.detect(img); return !!(r && r.detections && r.detections.length); }
+            } catch (e) {}
+            return false;
+        }
+        async function _plDetectFaces(urls) {
+            if (!urls || !urls.length) return _faceUrls;
+            var det = await getFaceDetector();
+            if (!det) return _faceUrls;
+            for (var i = 0; i < urls.length && _faceUrls.length < 4; i++) {
+                var img = await _plLoadCorsImg(urls[i]);
+                if (img && await _plImgHasFace(det, img)) _faceUrls.push(urls[i]);
+            }
+            return _faceUrls;
+        }
+        function startFaceDetect() {
+            if (faceDetectPromise) return faceDetectPromise;
+            var urls = [];
+            try { urls = extractImages(12); } catch (e) {}
+            faceDetectPromise = _plDetectFaces(urls).then(function (arr) {
+                if (arr && arr.length) console.log('[PL Koros] Fotos no rosto detectadas:', arr.length);
+                return arr;
+            }).catch(function () { return _faceUrls; });
+            return faceDetectPromise;
+        }
+
         function openModal() {
+            try { startFaceDetect(); } catch (e) {}
             plTrackOpen();
             // Lazy-load Phosphor Icons na primeira abertura
             if (!window.phosphorIconsLoaded) {
@@ -2190,6 +2253,27 @@ const fd = new FormData();
                                     allProdImgs.push(u);
                                 }
                             }
+                        }
+                    } catch (_) {}
+                    // A foto no rosto sempre vai primeiro; em seguida entram os packshots e
+                    // outras vistas da armação. Se a galeria não tiver rosto ou a detecção não
+                    // estiver disponível, mantém a ordem original sem bloquear a geração.
+                    try {
+                        if (!faceDetectPromise) startFaceDetect();
+                        if (faceDetectPromise) await Promise.race([faceDetectPromise, new Promise(function (r) { setTimeout(r, 4000); })]);
+                        if (_faceUrls && _faceUrls.length) {
+                            var imageKey = function (u) { return String(u || '').split('?')[0]; };
+                            var faceKeys = {};
+                            _faceUrls.forEach(function (u) { faceKeys[imageKey(u)] = true; });
+                            var ordered = [];
+                            var addImage = function (u) {
+                                if (u && !ordered.some(function (x) { return imageKey(x) === imageKey(u); })) ordered.push(u);
+                            };
+                            addImage(_faceUrls[0]);
+                            allProdImgs.filter(function (u) { return !faceKeys[imageKey(u)]; }).forEach(addImage);
+                            _faceUrls.slice(1).forEach(addImage);
+                            allProdImgs.forEach(addImage);
+                            allProdImgs = ordered;
                         }
                     } catch (_) {}
                     allProdImgs = allProdImgs.slice(0, 4);
