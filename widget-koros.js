@@ -3619,7 +3619,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
    Os elementos originais (#q-result-prodprice / #q-result-installment) ficam no DOM,
    escondidos, porque outras partes do widget leem o texto deles. */
 (function () {
-    var PL_WA = '5524999222210';
+    var PL_WA = ''; /* botão 'Comprar pelo WhatsApp' desligado 01/10/2026 a pedido do Lucas — era '5524999222210' */
     if (window.__plResultLayout) return; window.__plResultLayout = 1;
     function $(id) { return document.getElementById(id); }
     function num(t) { var m = String(t || '').replace(/\s/g, '').match(/(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})/); return m ? parseFloat(m[1].replace(/\./g, '') + '.' + m[2]) : 0; }
