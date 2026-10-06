@@ -1526,9 +1526,10 @@
             return plVarNaGaleria ? u : '';
         } catch (e) { return ''; }
     }
-        function extractImages(limit) {
+        function extractImages(limit, galeriaToda) {
             // cor escolhida pelo cliente vence a galeria (que mistura todas as cores)
-            { const _plv = plSelVarImg(); if (_plv) return [_plv]; }
+            // galeriaToda=true: ignora a cor (a busca de rosto precisa da galeria inteira — 06/10/2026)
+            if (!galeriaToda) { const _plv = plSelVarImg(); if (_plv) return [_plv]; }
             const containersSelectors = '.js-product-slide, .product-image-column, .js-swiper-product, [data-store^="product-image-"], .product__media-wrapper, .product-gallery__media, .product__media, .product-image-main, .product-media-container, [data-media-id], .product__media-item, .product-gallery, .product-single__media, .media-gallery, [data-component="product.gallery"], .swiper-slide:not(.swiper-slide-duplicate), .slider-wrapper';
             const possibleContainers = Array.from(document.querySelectorAll(containersSelectors));
             let imgEls = [];
@@ -1655,7 +1656,7 @@
         function startFaceDetect() {
             if (faceDetectPromise) return faceDetectPromise;
             var urls = [];
-            try { urls = extractImages(12); } catch (e) {}
+            try { urls = extractImages(12, true); } catch (e) {}
             faceDetectPromise = _plDetectFaces(urls).then(function (arr) {
                 if (arr && arr.length) console.log('[PL Koros] Fotos no rosto detectadas:', arr.length);
                 return arr;
@@ -2289,13 +2290,15 @@ const fd = new FormData();
                             _faceUrls.forEach(addImage);
                         }
                     } catch (_) {}
-                    allProdImgs = faceOnlyImgs.slice(0, 4);
-                    if (!allProdImgs.length) {
-                        try { document.getElementById('q-loading-box').style.display = 'none'; } catch (_) {}
-                        try { uploadStep.style.display = 'block'; } catch (_) {}
-                        try { genBtn.disabled = false; } catch (_) {}
-                        alert('Não encontramos uma foto deste óculos no rosto. Tente novamente em alguns segundos.');
-                        return;
+                    // 06/10/2026 (Lucas): NUNCA bloquear a prova. Com foto no rosto: usa as do rosto
+                    // (a cor escolhida vai na frente, pra IA acertar a cor). Sem rosto: fotos do produto.
+                    if (faceOnlyImgs.length) {
+                        var _cor = '';
+                        try { _cor = plSelVarImg() || ''; } catch (_) {}
+                        var _k = function (u) { return String(u || '').split('?')[0]; };
+                        allProdImgs = (_cor ? [_cor] : []).concat(faceOnlyImgs.filter(function (u) { return _k(u) !== _k(_cor); })).slice(0, 4);
+                    } else {
+                        allProdImgs = allProdImgs.slice(0, 4);
                     }
                     console.log('[PL Koros] Enviando', allProdImgs.length, 'fotos do produto');
                     for (let _pi = 0; _pi < allProdImgs.length; _pi++) {
