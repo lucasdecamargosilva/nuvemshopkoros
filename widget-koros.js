@@ -749,6 +749,11 @@
 .q-opt-s { font-size:11.5px; color:var(--c-muted); line-height:1.45; }
 .q-opt-destaque { border-color:var(--c-ink); background:var(--c-surface); }
 
+.q-obs-label { display:block; font-size:12px; font-weight:600; color:var(--c-ink-text, var(--c-ink)); margin:10px 0 5px; text-align:left; }
+.q-obs-label span { font-weight:400; color:var(--c-muted); }
+.q-obs { width:100%; box-sizing:border-box; min-height:58px; resize:vertical; font:inherit; font-size:13.5px;
+         border:1px solid rgba(0,0,0,.15); border-radius:10px; padding:9px 11px; margin:0 0 12px; background:#fff; color:#111; }
+.q-obs:focus { outline:none; border-color:var(--c-ink); }
 .q-lente-drop {
     border:2px dashed var(--c-line); border-radius:14px; padding:32px 20px;
     text-align:center; cursor:pointer; transition:border-color .18s, background .18s;
@@ -1087,6 +1092,8 @@
         <div id="q-card-lente" class="q-card-lente"></div>
         <div id="q-alternativas"></div>
         <div id="q-resumo-lente" class="q-resumo"></div>
+        <label class="q-obs-label" for="q-obs-lente">Observa&ccedil;&atilde;o <span>(opcional)</span></label>
+        <textarea id="q-obs-lente" class="q-obs" maxlength="300" rows="2" placeholder="Algo que a &oacute;tica precisa saber? Ex.: prefiro lente mais fina, tenho d&uacute;vida no grau&hellip;"></textarea>
         <button class="q-btn-black" id="q-add-lente">COMPRAR ARMA&Ccedil;&Atilde;O + LENTE</button>
         <button class="q-btn-outline" id="q-so-armacao" data-carrinho="sem" style="margin-top:9px;">COMPRAR SOMENTE A ARMA&Ccedil;&Atilde;O</button>
     </div>
@@ -2975,8 +2982,18 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             return s;
         } catch (e) { return 'nostore'; }
     }
+    // Observacao livre do cliente (08/10/2026): vai junto nos eventos de compra e aparece na Central de Lentes.
+    function obsLente() {
+        var el = document.getElementById('q-obs-lente');
+        return el ? String(el.value || '').trim().slice(0, 300) : '';
+    }
+
     function track(step, detail) {
         st.ultimo = step;
+        if (step === 'carrinho' || step === 'so_armacao') {
+            var _obs = obsLente();
+            if (_obs) detail = Object.assign({}, detail || {}, { obs: _obs });
+        }
         try {
             var tel = (document.getElementById('q-phone') || {}).value || '';
             var prod = (document.getElementById('q-result-prodname') || {}).textContent
