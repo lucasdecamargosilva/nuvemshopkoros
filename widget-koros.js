@@ -3250,6 +3250,11 @@ var PLLC = window.PLLC || (function () {
     function previa(api) {
         if (_pv || !window.PL_LENTES_PREVIEW || window.parent === window) return;
         _pv = api;
+        // a tela que o cliente vê na prévia volta pro painel, que marca a mesma etapa na barra de cima (13/10/2026)
+        if (api.telas) { var _pvEt = null; setInterval(function () {
+            var et = null; for (var k in api.telas) { var el = document.querySelector(api.telas[k]); if (el && el.getClientRects().length && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden') { et = k; break; } }
+            if (et && et !== _pvEt) { _pvEt = et; window.parent.postMessage({ type: 'pl-lentes-etapa', etapa: et }, '*'); }
+        }, 300); }
         var st = document.createElement('style');
         st.textContent = '[data-pllc-ref]{cursor:text!important;border-radius:4px;outline:none;transition:box-shadow .12s}' +
             '[data-pllc-ref]:empty::before{content:"Clique e escreva…";color:#a8a2b2;font-style:italic;text-transform:none;letter-spacing:0}[data-pllc-ref]:hover{box-shadow:0 0 0 2px rgba(99,14,212,.35)}[data-pllc-ref]:focus{box-shadow:0 0 0 2px #630ed4;background:rgba(255,255,255,.95)}';
@@ -4189,6 +4194,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
     function init() {
         // prévia do painel: pular pra etapa escolhida no mapa
         PLLC.previa({
+            telas: { telefone: '#q-step-lentes-tel', tipo: '#q-step-lentes', tratamento: '#q-step-receita', receita: '#q-step-upload', uso: '#q-step-uso', resultado: '#q-step-lente-final' },
             nec: { attr: 'data-visao', t: '.q-opt-t', s: '.q-opt-s' },
             reaplica: function (cfg) { if (window.__plAplica) window.__plAplica(cfg); },
             ir: function (et) {
