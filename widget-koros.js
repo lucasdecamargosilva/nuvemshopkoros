@@ -1023,7 +1023,7 @@
         <span>Precisamos do seu grau para indicar a lente certa.</span>
     </div>
     <input type="file" id="q-arquivo" accept="image/*,application/pdf" hidden>
-    <button class="q-opt q-opt-destaque" data-receita="whatsapp">
+    <button class="q-opt" data-receita="whatsapp">
         <span class="q-opt-t">&#128172; N&atilde;o tenho receita</span>
         <span class="q-opt-s">Falar com a &oacute;tica no WhatsApp &mdash; a gente te ajuda</span></button>
     <button class="q-opt" id="q-abrir-arquivo">
