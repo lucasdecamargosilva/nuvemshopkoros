@@ -3099,6 +3099,16 @@ var PLLC = window.PLLC || (function () {
             pai.insertBefore(b, ancora);
         });
     }
+    // Textos das telas (pergunta, dica, opções e botões) editáveis pelo painel: cfg.textos[{ sel, valor }].
+    function textos(cfg) {
+        if (!cfg || !Array.isArray(cfg.textos)) return;
+        cfg.textos.forEach(function (t) {
+            if (!t || !t.sel || !/^(#q-step-|\.plc-step\[data-step=)/.test(String(t.sel))) return;
+            var v = String(t.valor == null ? '' : t.valor).trim();
+            if (!v) return;
+            try { [].forEach.call(document.querySelectorAll(t.sel), function (el) { el.innerHTML = fmt(v); }); } catch (e) {}
+        });
+    }
     function cor(v) { return /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(String(v || '').trim()) ? String(v).trim() : null; }
     // Cores: modelo(t) devolve o CSS da loja com as cores já resolvidas.
     function tema(cfg, modelo) {
@@ -3196,7 +3206,7 @@ var PLLC = window.PLLC || (function () {
         w.__pllc = true;
         return w;
     }
-    return { carregar: carregar, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas, temaCompleto: temaCompleto, arrastavel: arrastavel };
+    return { carregar: carregar, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas, temaCompleto: temaCompleto, arrastavel: arrastavel, textos: textos };
 })();
 window.PLLC = PLLC;
 
@@ -3959,6 +3969,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         PLLC.carregar().then(function (cfg) {
             if (!cfg) return;
             PLLC.opcoes('#q-step-lentes', 'data-visao', cfg.necessidades, '.q-opt-t', '.q-opt-s');
+            PLLC.textos(cfg);   // textos das telas editados no painel
             PLLC.arrastavel('#q-step-lentes', 'data-visao');
             PLLC.temaCompleto(cfg, PL_MAPA_TEMA);   // uma cor por elemento, cantos e fonte
             PLLC.tema(cfg, function (t) {
