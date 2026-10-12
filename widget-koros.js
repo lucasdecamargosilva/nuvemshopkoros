@@ -3147,6 +3147,39 @@ var PLLC = window.PLLC || (function () {
         el.id = 'pllc-tema2'; el.textContent = css;
         (document.head || document.documentElement).appendChild(el);
     }
+    // Prévia do painel (rascunho): arrastar as opções da 1ª tela na própria prévia; a nova ordem volta pro painel.
+    function arrastavel(raiz, attr) {
+        if (!window.PL_LENTES_PREVIEW || !window.__PL_LENTES_CFG_OVERRIDE || window.parent === window) return;
+        var r = typeof raiz === 'string' ? document.querySelector(raiz) : raiz;
+        if (!r || r.__pllcDnd) return;
+        r.__pllcDnd = true;
+        if (!document.getElementById('pllc-dnd-css')) {
+            var st = document.createElement('style'); st.id = 'pllc-dnd-css';
+            st.textContent = '[data-pllc-arrasta]{cursor:grab!important;position:relative}[data-pllc-arrasta]:hover{outline:2px dashed #630ed4;outline-offset:2px}' +
+                '[data-pllc-arrasta].pllc-arrastando{opacity:.4}[data-pllc-arrasta].pllc-alvo{outline:2px solid #630ed4;outline-offset:2px}' +
+                '.pllc-dica{display:block;text-align:center;font:600 11px/1.4 system-ui,sans-serif;color:#630ed4;background:#f1ebfb;border-radius:8px;padding:6px 8px;margin:0 0 10px}';
+            (document.head || document.documentElement).appendChild(st);
+        }
+        var btns = [].slice.call(r.querySelectorAll('[' + attr + ']'));
+        if (!btns.length) return;
+        var dica = document.createElement('span'); dica.className = 'pllc-dica'; dica.textContent = '↕ Prévia: arraste as opções para mudar a ordem';
+        btns[0].parentNode.insertBefore(dica, btns[0]);
+        var arrastado = null;
+        btns.forEach(function (b) {
+            b.setAttribute('draggable', 'true'); b.setAttribute('data-pllc-arrasta', '1');
+            b.addEventListener('dragstart', function (e) { arrastado = b; b.classList.add('pllc-arrastando'); try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', b.getAttribute(attr)); } catch (x) {} });
+            b.addEventListener('dragend', function () { b.classList.remove('pllc-arrastando'); btns.forEach(function (x) { x.classList.remove('pllc-alvo'); }); arrastado = null; });
+            b.addEventListener('dragover', function (e) { if (!arrastado || arrastado === b) return; e.preventDefault(); btns.forEach(function (x) { x.classList.toggle('pllc-alvo', x === b); }); });
+            b.addEventListener('drop', function (e) {
+                if (!arrastado || arrastado === b) return; e.preventDefault();
+                var lista = [].slice.call(r.querySelectorAll('[' + attr + ']'));
+                var de = lista.indexOf(arrastado), para = lista.indexOf(b);
+                b.parentNode.insertBefore(arrastado, de < para ? b.nextSibling : b);
+                var ordem = [].slice.call(r.querySelectorAll('[' + attr + ']')).map(function (x) { return x.getAttribute(attr); });
+                try { window.parent.postMessage({ type: 'pl-lentes-ordem', lista: 'necessidades', ordem: ordem }, '*'); } catch (x) {}
+            });
+        });
+    }
     // Recomendação: tira opções vazias (lente desligada) e, se não sobrar nenhuma, manda pro atendimento.
     function embrulha(fn) {
         if (typeof fn !== 'function' || fn.__pllc) return fn;
@@ -3163,7 +3196,7 @@ var PLLC = window.PLLC || (function () {
         w.__pllc = true;
         return w;
     }
-    return { carregar: carregar, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas, temaCompleto: temaCompleto };
+    return { carregar: carregar, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas, temaCompleto: temaCompleto, arrastavel: arrastavel };
 })();
 window.PLLC = PLLC;
 
@@ -3900,6 +3933,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         PLLC.carregar().then(function (cfg) {
             if (!cfg) return;
             PLLC.opcoes('#q-step-lentes', 'data-visao', cfg.necessidades, '.q-opt-t', '.q-opt-s');
+            PLLC.arrastavel('#q-step-lentes', 'data-visao');
             PLLC.temaCompleto(cfg, PL_MAPA_TEMA);   // uma cor por elemento, cantos e fonte
             PLLC.tema(cfg, function (t) {
                 var s = '', v = [];
