@@ -3110,6 +3110,42 @@ var PLLC = window.PLLC || (function () {
         el.id = 'pllc-tema';
         el.textContent = modelo(t);
         (document.head || document.documentElement).appendChild(el);
+        var g = document.getElementById('pllc-tema2'); if (g) g.parentNode.appendChild(g);   // o completo fica por último
+    }
+    // ---- tema completo: uma cor por elemento + cantos + fonte (vence os atalhos de cor) ----
+    var PL_SLOTS = ['fundo_tela', 'fundo_janela', 'texto', 'texto_secundario', 'titulo', 'progresso_fundo', 'progresso',
+        'opcao_fundo', 'opcao_borda', 'opcao_foco', 'opcao_foco_fundo', 'botao', 'botao_texto', 'botao_secundario',
+        'botao_secundario_texto', 'link', 'preco', 'resultado_borda', 'aviso_fundo', 'aviso_texto', 'selo_fundo', 'selo_texto',
+        'campo_fundo', 'campo_borda'];
+    var PL_FONTES = { 'DM Sans': 'sans-serif', 'Inter': 'sans-serif', 'Poppins': 'sans-serif', 'Montserrat': 'sans-serif', 'Lato': 'sans-serif',
+        'Nunito': 'sans-serif', 'Raleway': 'sans-serif', 'Work Sans': 'sans-serif', 'Josefin Sans': 'sans-serif', 'Quicksand': 'sans-serif',
+        'Playfair Display': 'serif', 'Lora': 'serif', 'Cormorant Garamond': 'serif', 'Libre Baskerville': 'serif' };
+    function plCssGranular(t, mapa) {
+        if (!t || !mapa) return '';
+        var css = '', hex = function (v) { return /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(String(v || '').trim()) ? String(v).trim() : null; };
+        PL_SLOTS.forEach(function (k) {
+            var v = hex(t[k]); if (!v || !mapa[k]) return;
+            mapa[k].forEach(function (r) { css += r[0] + '{' + r[1] + ':' + v + '!important}'; });
+        });
+        var raio = parseInt(t.raio, 10);
+        if (t.raio !== undefined && t.raio !== '' && raio >= 0 && raio <= 40 && mapa.raio) mapa.raio.forEach(function (s) { css += s + '{border-radius:' + raio + 'px!important}'; });
+        if (t.fonte && PL_FONTES[t.fonte] && mapa.fonte) {
+            var id = 'pl-fonte-' + t.fonte.replace(/\s+/g, '-').toLowerCase();
+            if (!document.getElementById(id)) {
+                var l = document.createElement('link'); l.id = id; l.rel = 'stylesheet';
+                l.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(t.fonte).replace(/%20/g, '+') + ':wght@400;500;600;700&display=swap';
+                (document.head || document.documentElement).appendChild(l);
+            }
+            mapa.fonte.forEach(function (s) { css += s + '{font-family:\'' + t.fonte + '\',' + PL_FONTES[t.fonte] + '!important}'; });
+        }
+        return css;
+    }
+    function temaCompleto(cfg, mapa) {
+        if (!cfg || !cfg.tema) return;
+        var css = plCssGranular(cfg.tema, mapa); if (!css) return;
+        var el = document.getElementById('pllc-tema2') || document.createElement('style');
+        el.id = 'pllc-tema2'; el.textContent = css;
+        (document.head || document.documentElement).appendChild(el);
     }
     // Recomendação: tira opções vazias (lente desligada) e, se não sobrar nenhuma, manda pro atendimento.
     function embrulha(fn) {
@@ -3127,7 +3163,7 @@ var PLLC = window.PLLC || (function () {
         w.__pllc = true;
         return w;
     }
-    return { carregar: carregar, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas };
+    return { carregar: carregar, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas, temaCompleto: temaCompleto };
 })();
 window.PLLC = PLLC;
 
@@ -3281,7 +3317,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         });
         var ad = $('[data-r="adicao"]'); if (ad) ad.innerHTML = faixa(0.75, 3.50, 0.25);
     }
-    function mostrarAdicao() { var b = $('#q-bloco-adicao'); if (b) b.hidden = (st.visao !== 'multifocal'); }
+    function mostrarAdicao() { var b = $('#q-bloco-adicao'); if (b) b.hidden = !(st.visao === 'multifocal' || (!st.visao && PLLC.etapas().receita.posicao === 'primeiro')); }
     function limparReceita() { $$('[data-r]').forEach(function (s) { s.value = /Cil$/.test(s.dataset.r) ? '0.00' : ''; }); }
     function avisar(msg) { var el = $('#q-aviso-campo'); el.textContent = msg; el.hidden = false; el.scrollIntoView({ block: 'nearest' }); }
 
@@ -3290,7 +3326,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         var r = { odEsf: g('odEsf'), odCil: g('odCil'), odEixo: g('odEixo'), oeEsf: g('oeEsf'), oeCil: g('oeCil'), oeEixo: g('oeEixo') };
         if (r.odEsf === null || r.oeEsf === null) return { falta: 'esferico' };
         r.odCil = r.odCil || 0; r.oeCil = r.oeCil || 0;
-        if (st.visao === 'multifocal') { r.adicao = g('adicao'); if (r.adicao === null) return { falta: 'adicao' }; }
+        if (st.visao === 'multifocal' || !st.visao) { r.adicao = g('adicao'); if (st.visao === 'multifocal' && r.adicao === null) return { falta: 'adicao' }; }
         return { receita: r };
     }
 
@@ -3425,9 +3461,26 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         return ok.indexOf(p) !== -1 ? p : (ok[0] || p);
     }
     function _plPintaTrat() { if (typeof pintarTratamentos === 'function') pintarTratamentos(st.visao); }
+    function _plPrimeiraTela() {
+        st.visao = null; st.trat = null; st.receita = null; st.receitaOk = false;
+        if (PLLC.etapas().receita.posicao === 'primeiro') { if (typeof mostrarAdicao === 'function') mostrarAdicao(); ir('q-step-upload'); return; }
+        ir('q-step-lentes');
+    }
+    function _plFaltaAdicao() { return st.visao === 'multifocal' && st.receita && st.receita.adicao == null; }
     function _plDepoisDaVisao() {
         var e = PLLC.etapas();
-        st.trat = null; st.receitaOk = false;
+        st.trat = null;
+        if (st.receitaOk) {   // receita veio antes do tipo de lente
+            if (_plFaltaAdicao()) {
+                st.receitaOk = false;
+                if (typeof mostrarAdicao === 'function') mostrarAdicao();
+                abrirFormReceita('Falta a adição', 'Para lentes multifocais precisamos da adição (o grau de perto). Confira e preencha.');
+                return;
+            }
+            _plDepoisDaReceita(recomendarAgora);
+            return;
+        }
+        st.receitaOk = false;
         if (e.receita.posicao === 'inicio') { ir('q-step-upload'); return; }
         _plPintaTrat();
         if (e.tratamento.ativo === false) { st.trat = _plTratPadrao(); track('tratamento', { visao: st.visao, trat: st.trat, padrao: true }); ir('q-step-upload'); return; }
@@ -3435,6 +3488,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
     }
     function _plDepoisDaReceita(seguir) {
         st.receitaOk = true;
+        if (!st.visao) { ir('q-step-lentes'); return; }   // receita como primeira tela: agora o tipo de lente
         if (!st.trat) {
             _plPintaTrat();
             if (PLLC.etapas().tratamento.ativo === false) { st.trat = _plTratPadrao(); track('tratamento', { visao: st.visao, trat: st.trat, padrao: true }); seguir(); return; }
@@ -3532,7 +3586,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             '[data-lente],#q-btn-escolher-lentes,#q-abrir-arquivo,#q-ver-lente,#q-add-lente');
         if (!t) return;
 
-        if (t.id === 'q-btn-escolher-lentes') { e.preventDefault(); _entrouPeloProduto = false; track('abriu', { origem: 'provador' }); pedeTelefone(function () { ir('q-step-lentes'); }); return; }
+        if (t.id === 'q-btn-escolher-lentes') { e.preventDefault(); _entrouPeloProduto = false; track('abriu', { origem: 'provador' }); pedeTelefone(_plPrimeiraTela); return; }
         if (t.dataset.ir) { e.preventDefault(); if (t.dataset.ir === 'q-step-result') voltarResultado(); else ir(t.dataset.ir); return; }
 
         if (t.dataset.visao) {
@@ -3744,7 +3798,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         st.ultimo = 'abriu';
         _entrouPeloProduto = true;
         track('abriu', { origem: 'botao_produto' });
-        pedeTelefone(function () { ir('q-step-lentes'); });
+        pedeTelefone(_plPrimeiraTela);
     }
     function _botaoLentes() {
         var b = document.createElement('button');
@@ -3812,11 +3866,41 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
     }
 
     /* ---------- init ---------- */
+    var PL_MAPA_TEMA = {
+        fundo_tela: [['#q-modal-ia:has(:is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso)[style*=flex])', 'background']],
+        fundo_janela: [['#q-modal-ia:has(:is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso)[style*=flex]) .q-card-ia', 'background'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso)', 'background']],
+        texto: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso)', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-opt-t', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-card-lente-nome', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-olho-campos label', 'color']],
+        texto_secundario: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-opt-s', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-card-lente-mat', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-resumo', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-disclaimer', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-card-lente-parc', 'color']],
+        titulo: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-section-label', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-alt-titulo', 'color']],
+        progresso_fundo: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-passos i', 'background']],
+        progresso: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-passos i.on', 'background'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-passos i.done', 'background']],
+        opcao_fundo: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-opt', 'background'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-lente-drop', 'background']],
+        opcao_borda: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-opt', 'border-color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-lente-drop', 'border-color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-olho', 'border-color']],
+        opcao_foco: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-opt:hover', 'border-color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-opt-destaque', 'border-color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-opt-lente.is-selected', 'border-color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-lente-drop:hover', 'border-color']],
+        opcao_foco_fundo: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-opt:hover', 'background'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-opt-destaque', 'background'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-opt-lente.is-selected', 'background']],
+        botao: [['.q-btn-lentes-produto', 'background'], ['.q-btn-lentes', 'background'], ['#q-add-lente', 'background'], ['.q-btn-lentes-produto', 'border-color'], ['.q-btn-lentes', 'border-color'], ['#q-add-lente', 'border-color']],
+        botao_texto: [['.q-btn-lentes-produto', 'color'], ['.q-btn-lentes', 'color'], ['#q-add-lente', 'color']],
+        botao_secundario: [['#q-so-armacao', 'background'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-btn-outline', 'background'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-btn-outline', 'border-color']],
+        botao_secundario_texto: [['#q-so-armacao', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-btn-outline', 'color']],
+        link: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-voltar', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-sair', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-erro-leitura a', 'color']],
+        preco: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-card-lente-preco', 'color']],
+        resultado_borda: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-card-lente', 'border-color']],
+        aviso_fundo: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-banner-ia', 'background'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-card-lente-pq', 'background'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-grau-anotado', 'background']],
+        aviso_texto: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-banner-ia', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-card-lente-pq', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-grau-anotado', 'color']],
+        selo_fundo: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-card-lente-status', 'background'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-olho-tag', 'background']],
+        selo_texto: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-card-lente-status', 'color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-olho-tag', 'color']],
+        campo_fundo: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-olho-campos select', 'background'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-obs', 'background'], ['#q-lentes-tel', 'background']],
+        campo_borda: [[':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-olho-campos select', 'border-color'], [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-obs', 'border-color'], ['#q-lentes-tel', 'border-color']],
+        raio: [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-opt', ':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-card-lente', ':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-olho', ':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) .q-lente-drop', '#q-add-lente', '#q-so-armacao', '.q-btn-lentes-produto', '#q-modal-ia:has(:is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso)[style*=flex]) .q-card-ia'],
+        fonte: [':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso)', ':is(#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-uso) *', '.q-btn-lentes-produto', '.q-btn-lentes-produto *']
+    };
+
     function init() {
         // opções da 1ª tela e cores vindas do painel "Configurar fluxo" (PLLC)
         PLLC.carregar().then(function (cfg) {
             if (!cfg) return;
             PLLC.opcoes('#q-step-lentes', 'data-visao', cfg.necessidades, '.q-opt-t', '.q-opt-s');
+            PLLC.temaCompleto(cfg, PL_MAPA_TEMA);   // uma cor por elemento, cantos e fonte
             PLLC.tema(cfg, function (t) {
                 var s = '', v = [];
                 if (t.destaque) v.push('--c-ink:' + t.destaque, '--c-accent:' + t.destaque);
