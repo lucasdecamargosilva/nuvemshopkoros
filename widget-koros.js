@@ -730,7 +730,7 @@
 #q-modal-ia [hidden] { display: none !important; }
 
 /* ===== fluxo ESCOLHER LENTES (mesma linguagem visual do provador) ===== */
-#q-step-lentes, #q-step-receita, #q-step-upload, #q-step-lentes-tel, #q-step-lente-final {
+#q-step-lentes, #q-step-receita, #q-step-upload, #q-step-lentes-tel, #q-step-lente-final, #q-step-extra {
     display: none; flex-direction: column; padding: 26px 28px 30px; gap: 0;
 }
 .q-passos { display:flex; gap:5px; margin-bottom:20px; }
@@ -3109,6 +3109,82 @@ var PLLC = window.PLLC || (function () {
             try { [].forEach.call(document.querySelectorAll(t.sel), function (el) { el.innerHTML = fmt(v); }); } catch (e) {}
         });
     }
+    /* ---- Etapas criadas pelo lojista (cfg.etapas_extra, 13/10/2026) ----
+       { id, nome, titulo, dica, tipo: 'escolha'|'multipla'|'texto', opcoes:[{key,titulo,desc}], obrigatoria, antes_de: 'tipo'|'tratamento'|'receita'|'resultado', ativo }
+       Aparecem antes do ponto escolhido; a resposta vai pro rastreio (lentes_funnel). Não mudam a lente indicada. */
+    var respondidas = {};
+    function extras() {
+        var c = atual || window.__PL_LENTES_CFG_OVERRIDE;
+        return (c && Array.isArray(c.etapas_extra) ? c.etapas_extra : []).filter(function (x) {
+            return x && x.id && x.ativo !== false && String(x.titulo || '').trim() &&
+                (x.tipo === 'texto' || (Array.isArray(x.opcoes) && x.opcoes.some(function (o) { return o && String(o.titulo || '').trim(); })));
+        });
+    }
+    function pendente(antes) {
+        var l = extras();
+        for (var i = 0; i < l.length; i++) if ((l[i].antes_de || 'resultado') === antes && !Object.prototype.hasOwnProperty.call(respondidas, l[i].id)) return l[i];
+        return null;
+    }
+    function limpaRespostas() { respondidas = {}; }
+    function respostas() { var r = {}; for (var k in respondidas) r[k] = respondidas[k]; return r; }
+    function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    // kit 'q' (Koros/Maxilook/Sirena) ou 'plc' (Cacifé): mesmas classes das telas da loja, então pega o tema.
+    function telaExtra(x, el, kit, pronto) {
+        var q = kit === 'q', h = q ? '<div class="q-passos"></div>' : '<div class="plc-progress"></div>';
+        h += q ? '<span class="q-section-label">' + fmt(x.titulo) + '</span>' : '<span class="plc-label">' + fmt(x.titulo) + '</span>';
+        if (String(x.dica || '').trim()) h += q ? '<div class="q-tip-box" style="margin-bottom:16px;"><i class="ph ph-lightbulb"></i><span>' + fmt(x.dica) + '</span></div>' : '<div class="plc-note">' + fmt(x.dica) + '</div>';
+        var multi = x.tipo === 'multipla', texto = x.tipo === 'texto', obrig = x.obrigatoria !== false;
+        if (texto) {
+            h += q ? '<input type="text" class="q-input" data-pllc-x-in maxlength="200">' : '<div class="plc-field"><input type="text" data-pllc-x-in maxlength="200"></div>';
+        } else {
+            (x.opcoes || []).forEach(function (o, i) {
+                if (!o || !String(o.titulo || '').trim()) return;
+                h += q ? '<button type="button" class="q-opt" data-pllc-x-op="' + i + '"><span class="q-opt-t">' + fmt(o.titulo) + '</span>' + (String(o.desc || '').trim() ? '<span class="q-opt-s">' + fmt(o.desc) + '</span>' : '') + '</button>'
+                    : '<button type="button" class="plc-opt" data-pllc-x-op="' + i + '"><b>' + fmt(o.titulo) + '</b>' + (String(o.desc || '').trim() ? '<small>' + fmt(o.desc) + '</small>' : '') + '</button>';
+            });
+        }
+        var precisaBotao = multi || texto;
+        if (precisaBotao) h += q ? '<button type="button" class="q-opt q-opt-destaque" data-pllc-x-ok style="margin-top:16px;text-align:center;align-items:center;"><span class="q-opt-t">Continuar</span></button>' : '<button type="button" class="plc-primary" data-pllc-x-ok>Continuar</button>';
+        if (!obrig) h += q ? '<a class="q-voltar" data-pllc-x-pula style="cursor:pointer">pular</a>' : '<button type="button" class="plc-back" data-pllc-x-pula>pular</button>';
+        h += '<div data-pllc-x-erro style="display:none;color:#c0392b;font-size:13px;margin-top:8px">' + (texto ? 'Preencha para continuar.' : 'Escolha pelo menos uma opção.') + '</div>';
+        el.innerHTML = h;
+        if (!document.getElementById('pllc-x-css')) {
+            var st = document.createElement('style'); st.id = 'pllc-x-css';
+            st.textContent = '[data-pllc-x-op][aria-pressed="true"]{outline:2px solid currentColor!important;outline-offset:-2px}';
+            (document.head || document.documentElement).appendChild(st);
+        }
+        var marcadas = {}, fim = function (resp) { respondidas[x.id] = resp; pronto(resp); };
+        var erro = el.querySelector('[data-pllc-x-erro]');
+        [].forEach.call(el.querySelectorAll('[data-pllc-x-op]'), function (b) {
+            b.addEventListener('click', function (e) {
+                e.preventDefault(); e.stopPropagation();
+                var o = x.opcoes[+b.getAttribute('data-pllc-x-op')], nome = String(o.titulo).trim();
+                if (!multi) { fim(nome); return; }
+                if (marcadas[nome]) delete marcadas[nome]; else marcadas[nome] = 1;
+                b.setAttribute('aria-pressed', marcadas[nome] ? 'true' : 'false');
+                erro.style.display = 'none';
+            });
+        });
+        var ok = el.querySelector('[data-pllc-x-ok]');
+        if (ok) ok.addEventListener('click', function (e) {
+            e.preventDefault(); e.stopPropagation();
+            var v = texto ? String((el.querySelector('[data-pllc-x-in]') || {}).value || '').trim() : Object.keys(marcadas).join(', ');
+            if (!v && obrig) { erro.style.display = 'block'; return; }
+            fim(v);
+        });
+        var pula = el.querySelector('[data-pllc-x-pula]');
+        if (pula) pula.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); fim(''); });
+    }
+    // Sequência com as etapas extras inseridas antes de cada ponto (pra barra de progresso).
+    function seqComExtras(seq, ancoraDe) {
+        var l = extras(), out = [];
+        seq.forEach(function (s) {
+            var a = ancoraDe(s);
+            if (a) l.forEach(function (x) { if ((x.antes_de || 'resultado') === a) out.push('x:' + x.id); });
+            out.push(s);
+        });
+        return out;
+    }
     function cor(v) { return /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(String(v || '').trim()) ? String(v).trim() : null; }
     // Cores: modelo(t) devolve o CSS da loja com as cores já resolvidas.
     function tema(cfg, modelo) {
@@ -3206,7 +3282,7 @@ var PLLC = window.PLLC || (function () {
         w.__pllc = true;
         return w;
     }
-    return { carregar: carregar, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas, temaCompleto: temaCompleto, arrastavel: arrastavel, textos: textos };
+    return { carregar: carregar, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas, temaCompleto: temaCompleto, arrastavel: arrastavel, textos: textos, extras: extras, pendente: pendente, limpaRespostas: limpaRespostas, respostas: respostas, telaExtra: telaExtra, seqComExtras: seqComExtras };
 })();
 window.PLLC = PLLC;
 
@@ -3310,8 +3386,30 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         });
     }
 
-    var TELAS = ['q-step-lentes', 'q-step-receita', 'q-step-upload', 'q-step-lentes-tel', 'q-step-lente-final'];
+    var TELAS = ['q-step-lentes', 'q-step-receita', 'q-step-upload', 'q-step-lentes-tel', 'q-step-lente-final', 'q-step-extra'];
+    // Etapas criadas pelo lojista entram antes do ponto escolhido (PLLC.pendente).
+    var _plExtraAtual = null;
+    var _PL_ANCORA = { 'q-step-lentes': 'tipo', 'q-step-receita': 'tratamento', 'q-step-upload': 'receita' };
+    function _plAncora(id) {
+        if (_PL_ANCORA[id]) return _PL_ANCORA[id];
+        if (id === 'q-step-lente-final') { var r = document.getElementById('q-resultado-lente'); return r && !r.hidden ? 'resultado' : null; }
+        return null;
+    }
     function ir(id) {
+        var anc = _plAncora(id), x = anc && PLLC.pendente(anc);
+        if (x) {
+            var el = document.getElementById('q-step-extra'), ref = document.getElementById('q-step-lentes');
+            if (!el && ref) { el = document.createElement('div'); el.id = 'q-step-extra'; el.style.display = 'none'; ref.parentNode.insertBefore(el, ref); }
+            if (el) {
+                _plExtraAtual = x.id;
+                PLLC.telaExtra(x, el, 'q', function (resp) { track('etapa_extra', { etapa: x.nome || x.titulo, pergunta: x.titulo, resposta: resp }); ir(id); });
+                _irTela('q-step-extra');
+                return;
+            }
+        }
+        _irTela(id);
+    }
+    function _irTela(id) {
         try { _plPassos(id); } catch (e) {}
         // esconde as telas do fluxo E a tela de resultado do provador
         TELAS.forEach(function (t) { var el = document.getElementById(t); if (el) el.style.display = 'none'; });
@@ -3511,12 +3609,13 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         if (e.receita.posicao === 'primeiro') s = ['q-step-upload', 'q-step-lentes', t];
         else if (e.receita.posicao === 'inicio') s = ['q-step-lentes', 'q-step-upload', t];
         else s = ['q-step-lentes', t, 'q-step-upload'];
-        return s.filter(Boolean).concat(['q-step-lente-final']);
+        return PLLC.seqComExtras(s.filter(Boolean).concat(['q-step-lente-final']), function (k) { return k === 'q-step-lente-final' ? 'resultado' : _PL_ANCORA[k]; });
     }
     function _plPassos(id) {
         var alvo = document.getElementById(id); if (!alvo) return;
         var seq = _plSeq(), chave = id;
         if (id === 'q-step-uso') chave = 'q-step-upload';
+        if (id === 'q-step-extra') chave = 'x:' + _plExtraAtual;
         if (id === 'q-step-lente-final' && $('#q-form-receita') && !$('#q-form-receita').hidden) chave = 'q-step-upload';   // formulário da receita
         var idx = seq.indexOf(chave);
         var p = alvo.querySelector('.q-passos');
@@ -3531,6 +3630,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         }
     }
     function _plPrimeiraTela() {
+        PLLC.limpaRespostas();
         st.visao = null; st.trat = null; st.receita = null; st.receitaOk = false;
         if (PLLC.etapas().receita.posicao === 'primeiro') { if (typeof mostrarAdicao === 'function') mostrarAdicao(); ir('q-step-upload'); return; }
         ir('q-step-lentes');
@@ -3977,7 +4077,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
                 if (t.destaque) v.push('--c-ink:' + t.destaque, '--c-accent:' + t.destaque);
                 if (t.fundo_opcao) v.push('--c-surface:' + t.fundo_opcao);
                 if (t.borda) v.push('--c-line:' + t.borda);
-                if (v.length) s += '#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final{' + v.join(';') + '}';
+                if (v.length) s += '#q-step-lentes,#q-step-receita,#q-step-upload,#q-step-lentes-tel,#q-step-lente-final,#q-step-extra{' + v.join(';') + '}';
                 if (t.botao) s += '.q-btn-lentes-produto,.q-btn-lentes,#q-add-lente{background:' + t.botao + '!important;border-color:' + t.botao + '!important}';
                 if (t.botao_texto) s += '.q-btn-lentes-produto,.q-btn-lentes,#q-add-lente{color:' + t.botao_texto + '!important}';
                 return s;
