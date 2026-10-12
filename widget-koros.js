@@ -3121,6 +3121,7 @@ var PLLC = window.PLLC || (function () {
         });
     }
     function pendente(antes) {
+        if (window.__PLLC_SEM_EXTRAS) return null;
         var l = extras();
         for (var i = 0; i < l.length; i++) if ((l[i].antes_de || 'resultado') === antes && !Object.prototype.hasOwnProperty.call(respondidas, l[i].id)) return l[i];
         return null;
@@ -3148,6 +3149,7 @@ var PLLC = window.PLLC || (function () {
         if (!obrig) h += q ? '<a class="q-voltar" data-pllc-x-pula style="cursor:pointer">pular</a>' : '<button type="button" class="plc-back" data-pllc-x-pula>pular</button>';
         h += '<div data-pllc-x-erro style="display:none;color:#c0392b;font-size:13px;margin-top:8px">' + (texto ? 'Preencha para continuar.' : 'Escolha pelo menos uma opção.') + '</div>';
         el.innerHTML = h;
+        try { el.setAttribute('data-pllc-xid', String(((cfgAtual() || {}).etapas_extra || []).indexOf(x))); } catch (e) {}
         if (!document.getElementById('pllc-x-css')) {
             var st = document.createElement('style'); st.id = 'pllc-x-css';
             st.textContent = '[data-pllc-x-op][aria-pressed="true"]{outline:2px solid currentColor!important;outline-offset:-2px}';
@@ -3184,6 +3186,90 @@ var PLLC = window.PLLC || (function () {
             out.push(s);
         });
         return out;
+    }
+    /* ---- Prévia ao vivo do painel (13/10/2026): só dentro da prévia "Configurar fluxo" (iframe do painel).
+       Recebe a config sem recarregar (pl-lentes-cfg-live), pula pra etapa escolhida no mapa (pl-lentes-ir) e deixa
+       editar os textos clicando neles (manda pl-lentes-edit pro painel). Na loja de verdade nada disso liga. ---- */
+    var _pv = null, _pvEditar = true;
+    function cfgAtual() { return atual || window.__PL_LENTES_CFG_OVERRIDE || null; }
+    function _pvValor(ref) {
+        var p = String(ref).split(':'), c = cfgAtual() || {};
+        try {
+            if (p[0] === 't') return (c.textos[+p[1]] || {}).valor;
+            if (p[0] === 'n') return (c.necessidades[+p[1]] || {})[p[2]];
+            if (p[0] === 'x') return (c.etapas_extra[+p[1]] || {})[p[2]];
+            if (p[0] === 'xo') return ((c.etapas_extra[+p[1]] || {}).opcoes[+p[2]] || {})[p[3]];
+        } catch (e) {}
+        return '';
+    }
+    function _pvGrava(ref, v) {
+        var p = String(ref).split(':'), c = cfgAtual() || {};
+        try {
+            if (p[0] === 't') c.textos[+p[1]].valor = v;
+            else if (p[0] === 'n') c.necessidades[+p[1]][p[2]] = v;
+            else if (p[0] === 'x') c.etapas_extra[+p[1]][p[2]] = v;
+            else if (p[0] === 'xo') c.etapas_extra[+p[1]].opcoes[+p[2]][p[3]] = v;
+        } catch (e) {}
+    }
+    function _pvMarca(el, ref) { if (!el) return; el.setAttribute('data-pllc-ref', ref); el.setAttribute('contenteditable', 'true'); el.setAttribute('spellcheck', 'false'); }
+    function marcaEditaveis() {
+        if (!_pv) return;
+        [].forEach.call(document.querySelectorAll('[data-pllc-ref]'), function (el) { if (el === document.activeElement) return; el.removeAttribute('contenteditable'); el.removeAttribute('data-pllc-ref'); });
+        if (!_pvEditar) return;
+        var c = cfgAtual() || {};
+        (c.textos || []).forEach(function (t, i) {
+            if (!t || !t.sel || !/^(#q-step-|\.plc-step\[data-step=)/.test(String(t.sel))) return;
+            try { [].forEach.call(document.querySelectorAll(t.sel), function (el) { _pvMarca(el, 't:' + i); }); } catch (e) {}
+        });
+        var nc = _pv.nec;
+        if (nc) (c.necessidades || []).forEach(function (n, i) {
+            [].forEach.call(document.querySelectorAll('[' + nc.attr + '="' + n.key + '"]'), function (b) { _pvMarca(b.querySelector(nc.t), 'n:' + i + ':titulo'); _pvMarca(b.querySelector(nc.s), 'n:' + i + ':desc'); });
+        });
+        [].forEach.call(document.querySelectorAll('[data-pllc-xid]'), function (el) {
+            var i = el.getAttribute('data-pllc-xid');
+            _pvMarca(el.querySelector('.q-section-label,.plc-label'), 'x:' + i + ':titulo');
+            _pvMarca(el.querySelector('.q-tip-box span,.plc-note'), 'x:' + i + ':dica');
+            [].forEach.call(el.querySelectorAll('[data-pllc-x-op]'), function (b) {
+                var j = b.getAttribute('data-pllc-x-op');
+                _pvMarca(b.querySelector('.q-opt-t,b'), 'xo:' + i + ':' + j + ':titulo');
+                _pvMarca(b.querySelector('.q-opt-s,small'), 'xo:' + i + ':' + j + ':desc');
+            });
+        });
+    }
+    function previa(api) {
+        if (_pv || !window.PL_LENTES_PREVIEW || window.parent === window) return;
+        _pv = api;
+        var st = document.createElement('style');
+        st.textContent = '[data-pllc-ref]{cursor:text!important;border-radius:4px;outline:none;transition:box-shadow .12s}' +
+            '[data-pllc-ref]:empty::before{content:"Clique e escreva…";color:#a8a2b2;font-style:italic;text-transform:none;letter-spacing:0}[data-pllc-ref]:hover{box-shadow:0 0 0 2px rgba(99,14,212,.35)}[data-pllc-ref]:focus{box-shadow:0 0 0 2px #630ed4;background:rgba(255,255,255,.95)}';
+        (document.head || document.documentElement).appendChild(st);
+        window.addEventListener('message', function (e) {
+            var d = e.data || {};
+            if (d.type === 'pl-lentes-cfg-live' && d.config) {
+                window.__PL_LENTES_CFG_OVERRIDE = d.config; atual = d.config;
+                try { api.reaplica(d.config); } catch (x) {}
+                try { if (api.atualizaTela) api.atualizaTela(); } catch (x) {}
+                marcaEditaveis();
+            } else if (d.type === 'pl-lentes-ir') { try { api.ir(String(d.etapa || '')); } catch (x) {} marcaEditaveis(); }
+            else if (d.type === 'pl-lentes-modo') { _pvEditar = !!d.editar; marcaEditaveis(); }
+        });
+        document.addEventListener('input', function (e) {
+            var el = e.target && e.target.closest && e.target.closest('[data-pllc-ref]'); if (!el) return;
+            var v = (el.textContent || '').replace(/\s+/g, ' ').trim(), ref = el.getAttribute('data-pllc-ref');
+            _pvGrava(ref, v);
+            window.parent.postMessage({ type: 'pl-lentes-edit', ref: ref, valor: v }, '*');
+        });
+        document.addEventListener('focusin', function (e) { var el = e.target && e.target.closest && e.target.closest('[data-pllc-ref]'); if (el) el.textContent = String(_pvValor(el.getAttribute('data-pllc-ref')) || ''); });
+        document.addEventListener('focusout', function (e) { var el = e.target && e.target.closest && e.target.closest('[data-pllc-ref]'); if (el) el.innerHTML = fmt(_pvValor(el.getAttribute('data-pllc-ref')) || ''); });
+        document.addEventListener('keydown', function (e) { var el = e.target && e.target.closest && e.target.closest('[data-pllc-ref]'); if (el && e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+        document.addEventListener('paste', function (e) { var el = e.target && e.target.closest && e.target.closest('[data-pllc-ref]'); if (!el) return; e.preventDefault(); document.execCommand('insertText', false, ((e.clipboardData || window.clipboardData).getData('text/plain') || '').replace(/\s*\n\s*/g, ' ')); });
+        // no modo "editar", clicar num texto edita (não aciona a opção)
+        ['click', 'mouseup', 'touchend'].forEach(function (tp) {
+            window.addEventListener(tp, function (e) { if (_pvEditar && e.target && e.target.closest && e.target.closest('[data-pllc-ref]')) { e.stopPropagation(); if (tp === 'click') e.preventDefault(); } }, true);
+        });
+        new MutationObserver(function () { clearTimeout(_pv._t); _pv._t = setTimeout(marcaEditaveis, 120); }).observe(document.body, { childList: true, subtree: true });
+        setTimeout(marcaEditaveis, 400);
+        window.parent.postMessage({ type: 'pl-lentes-live-ok' }, '*');
     }
     function cor(v) { return /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(String(v || '').trim()) ? String(v).trim() : null; }
     // Cores: modelo(t) devolve o CSS da loja com as cores já resolvidas.
@@ -3282,7 +3368,7 @@ var PLLC = window.PLLC || (function () {
         w.__pllc = true;
         return w;
     }
-    return { carregar: carregar, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas, temaCompleto: temaCompleto, arrastavel: arrastavel, textos: textos, extras: extras, pendente: pendente, limpaRespostas: limpaRespostas, respostas: respostas, telaExtra: telaExtra, seqComExtras: seqComExtras };
+    return { carregar: carregar, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas, temaCompleto: temaCompleto, arrastavel: arrastavel, textos: textos, extras: extras, pendente: pendente, limpaRespostas: limpaRespostas, respostas: respostas, telaExtra: telaExtra, seqComExtras: seqComExtras, previa: previa, cfgAtual: cfgAtual };
 })();
 window.PLLC = PLLC;
 
@@ -4065,8 +4151,36 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
     };
 
     function init() {
+        // prévia do painel: pular pra etapa escolhida no mapa
+        PLLC.previa({
+            nec: { attr: 'data-visao', t: '.q-opt-t', s: '.q-opt-s' },
+            reaplica: function (cfg) { if (window.__plAplica) window.__plAplica(cfg); },
+            ir: function (et) {
+                var modal = document.getElementById('q-modal-ia'); if (modal) modal.style.display = 'flex';
+                ['q-step-photo', 'q-step-pix', 'q-step-error'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
+                var necs = ((PLLC.cfgAtual() || {}).necessidades || []), comGrau = null;
+                for (var i = 0; i < necs.length; i++) if (necs[i].ativo !== false && necs[i].key !== 'descanso') { comGrau = necs[i].key; break; }
+                if (et.indexOf('x:') === 0) {
+                    var x = ((PLLC.cfgAtual() || {}).etapas_extra || [])[+et.slice(2)]; if (!x) return;
+                    var el = document.getElementById('q-step-extra'), ref = document.getElementById('q-step-lentes');
+                    if (!el && ref) { el = document.createElement('div'); el.id = 'q-step-extra'; el.style.display = 'none'; ref.parentNode.insertBefore(el, ref); }
+                    if (!el) return;
+                    _plExtraAtual = x.id; PLLC.telaExtra(x, el, 'q', function () {}); _irTela('q-step-extra'); return;
+                }
+                if (et === 'telefone') return _irTela('q-step-lentes-tel');
+                if (et === 'tipo') return _irTela('q-step-lentes');
+                if (et === 'tratamento') { if (!st.visao || st.visao === 'descanso') st.visao = comGrau; _plPintaTrat(); return _irTela('q-step-receita'); }
+                if (et === 'receita') { if (typeof mostrarAdicao === 'function') mostrarAdicao(); return _irTela('q-step-upload'); }
+                if (et === 'uso') return _irTela('q-step-uso');
+                if (et === 'resultado') {
+                    st.visao = 'descanso'; st.trat = 'blue'; st.receita = null;
+                    window.__PLLC_SEM_EXTRAS = true;
+                    try { recomendarAgora(); } finally { window.__PLLC_SEM_EXTRAS = false; }
+                }
+            }
+        });
         // opções da 1ª tela e cores vindas do painel "Configurar fluxo" (PLLC)
-        PLLC.carregar().then(function (cfg) {
+        PLLC.carregar().then(window.__plAplica = function (cfg) {
             if (!cfg) return;
             PLLC.opcoes('#q-step-lentes', 'data-visao', cfg.necessidades, '.q-opt-t', '.q-opt-s');
             PLLC.textos(cfg);   // textos das telas editados no painel
