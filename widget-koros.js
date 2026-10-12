@@ -3302,6 +3302,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
 
     var TELAS = ['q-step-lentes', 'q-step-receita', 'q-step-upload', 'q-step-lentes-tel', 'q-step-lente-final'];
     function ir(id) {
+        try { _plPassos(id); } catch (e) {}
         // esconde as telas do fluxo E a tela de resultado do provador
         TELAS.forEach(function (t) { var el = document.getElementById(t); if (el) el.style.display = 'none'; });
         var res = document.getElementById('q-step-result'); if (res) res.style.display = 'none';
@@ -3494,6 +3495,31 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
         return ok.indexOf(p) !== -1 ? p : (ok[0] || p);
     }
     function _plPintaTrat() { if (typeof pintarTratamentos === 'function') pintarTratamentos(st.visao); }
+    /* Barra de progresso e "voltar" seguem a ordem configurada no painel (as telas têm pontinhos fixos no HTML). */
+    function _plSeq() {
+        var e = PLLC.etapas(), t = e.tratamento.ativo !== false ? 'q-step-receita' : null, s;
+        if (e.receita.posicao === 'primeiro') s = ['q-step-upload', 'q-step-lentes', t];
+        else if (e.receita.posicao === 'inicio') s = ['q-step-lentes', 'q-step-upload', t];
+        else s = ['q-step-lentes', t, 'q-step-upload'];
+        return s.filter(Boolean).concat(['q-step-lente-final']);
+    }
+    function _plPassos(id) {
+        var alvo = document.getElementById(id); if (!alvo) return;
+        var seq = _plSeq(), chave = id;
+        if (id === 'q-step-uso') chave = 'q-step-upload';
+        if (id === 'q-step-lente-final' && $('#q-form-receita') && !$('#q-form-receita').hidden) chave = 'q-step-upload';   // formulário da receita
+        var idx = seq.indexOf(chave);
+        var p = alvo.querySelector('.q-passos');
+        if (p && idx !== -1) { var h = ''; for (var i = 0; i < seq.length; i++) h += '<i class="' + (i < idx ? 'done' : i === idx ? 'on' : '') + '"></i>'; p.innerHTML = h; }
+        if (id === 'q-step-upload') {   // "voltar" da receita: pra tela anterior de verdade (ou some se ela é a primeira)
+            var v = alvo.querySelector('.q-voltar[data-ir]');
+            if (v) {
+                var ant = idx > 0 ? seq[idx - 1] : null;
+                v.style.display = ant ? '' : 'none';
+                if (ant) v.setAttribute('data-ir', ant);
+            }
+        }
+    }
     function _plPrimeiraTela() {
         st.visao = null; st.trat = null; st.receita = null; st.receitaOk = false;
         if (PLLC.etapas().receita.posicao === 'primeiro') { if (typeof mostrarAdicao === 'function') mostrarAdicao(); ir('q-step-upload'); return; }
