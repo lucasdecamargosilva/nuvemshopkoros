@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="product">
+<title>Prévia do fluxo de lentes — Koros</title>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f6f5f2;color:#1c1826}
+  main{max-width:420px;margin:0 auto;padding:28px 18px 48px}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:#F39C12;padding:4px 10px;border-radius:99px}
+  .foto{height:220px;border-radius:14px;background:#e9e6df;display:grid;place-items:center;color:#8a8478;font-size:13px;margin:16px 0}
+  h1{font-size:20px;line-height:1.3;margin:6px 0}
+  .js-price-display{font-size:22px;font-weight:700;margin:8px 0 16px}
+  .form-row{margin:0} .js-addtocart{width:100%;height:50px;border:0;border-radius:10px;background:#1c1826;color:#fff;font-size:15px;font-weight:600}
+  .nota{font-size:12px;color:#6b6577;margin-top:18px;line-height:1.5}
+</style>
+<script>
+  /* Prévia do painel "Configurar fluxo" (dashboard Provou Levou): o fluxo de lentes REAL da loja em modo
+     demonstração. Nada é rastreado, nada vai pro carrinho, nenhuma mensagem é enviada. */
+  window.PL_LENTES_PREVIEW = true;
+  window.PL_LENTES_DOMINIO = 'korosoculos.com.br';
+  window.LS = { product: { id: 0, name: 'ÓCULOS DE GRAU - DEMONSTRAÇÃO' }, variants: [{ price_number: 299 }] };
+  try { localStorage.setItem('pl_last_phone', '11999999999'); } catch (e) {}
+  (function () {
+    var _f = window.fetch;
+    window.fetch = function (u, o) {
+      var s = String((u && u.url) || u);
+      if (/\/comprar\//.test(s) || (/segredosdodrop\.com\/webhook\//.test(s) && !/pl-ler-receita/.test(s)))
+        return Promise.resolve(new Response('{"ok":true}', { status: 200, headers: { 'Content-Type': 'application/json' } }));
+      return _f.apply(this, arguments);
+    };
+    try { navigator.sendBeacon = function () { return true; }; } catch (e) {}
+    window.open = function () { alert('Na loja, isto abre o WhatsApp da ótica. Nesta prévia nada foi enviado.'); return null; };
+  })();
+</script>
+</head>
+<body>
+<main>
+  <span class="tag">Prévia · Koros</span>
+  <div class="foto">Armação de demonstração</div>
+  <h1 class="js-product-name product-name">ÓCULOS DE GRAU - DEMONSTRAÇÃO</h1>
+  <div class="js-price-display price">R$ 299,00</div>
+  <form id="product_form" class="js-product-form">
+    <input type="hidden" name="add_to_cart" value="0">
+    <input type="hidden" name="quantity" value="1">
+    <div class="form-row"><button type="button" class="js-addtocart btn-add-to-cart" data-component="product.add-to-cart">Comprar</button></div>
+  </form>
+  <p class="nota"><b>Prévia segura:</b> é o fluxo real da loja, mas nada é enviado nem vai pro carrinho.</p>
+</main>
+<script>
+  /* ?abrir=1 abre o fluxo sozinho. ?draft=1 = rascunho do painel: espera a config ainda não salva (postMessage). */
+  (function () {
+    var qs = new URLSearchParams(location.search);
+    function carrega() {
+      var s = document.createElement('script');
+      s.src = '../../widget-koros.js?v=' + Date.now();
+      document.body.appendChild(s);
+      if (qs.get('abrir') !== '1') return;
+      var t = 0, iv = setInterval(function () {
+        var b = [].slice.call(document.querySelectorAll('.q-btn-lentes-produto')).filter(function (x) { return x.offsetParent; })[0];
+        if (b) { clearInterval(iv); setTimeout(function () { b.click(); }, 300); } else if (++t > 100) clearInterval(iv);
+      }, 120);
+    }
+    if (qs.get('draft') !== '1') { carrega(); return; }
+    var ORIGENS = ['https://provoulevou.com.br', 'https://www.provoulevou.com.br', 'http://localhost:8765'];
+    var feito = false;
+    window.addEventListener('message', function (e) {
+      if (feito || ORIGENS.indexOf(e.origin) === -1 || !e.data || e.data.type !== 'pl-lentes-cfg') return;
+      feito = true;
+      window.__PL_LENTES_CFG_OVERRIDE = e.data.config;
+      carrega();
+    });
+    if (window.parent !== window) window.parent.postMessage({ type: 'pl-lentes-ready' }, '*');
+    setTimeout(function () { if (!feito) { feito = true; carrega(); } }, 4000);
+  })();
+</script>
+</body>
+</html>
