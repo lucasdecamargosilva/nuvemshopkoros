@@ -3070,6 +3070,9 @@ var PLLC = window.PLLC || (function () {
     // Catálogo: muda as lentes no lugar (o motor de recomendação lê o mesmo array).
     function catalogo(LENTES, cfg) {
         if (!cfg || !Array.isArray(cfg.lentes) || !Array.isArray(LENTES)) return;
+        // lentes novas da loja aprovadas no painel ("Atualizar lentes da loja", 13/10/2026), no mesmo formato desta loja
+        if (Array.isArray(cfg.lentes_extra)) { var tem = {}; LENTES.forEach(function (L) { tem[String(L.id)] = 1; });
+            cfg.lentes_extra.forEach(function (x) { if (x && x.id != null && !tem[String(x.id)]) { LENTES.push(JSON.parse(JSON.stringify(x))); tem[String(x.id)] = 1; } }); }
         var por = {};
         cfg.lentes.forEach(function (l) { if (l && l.key != null) por[String(l.key)] = l; });
         for (var i = LENTES.length - 1; i >= 0; i--) {
@@ -3281,6 +3284,7 @@ var PLLC = window.PLLC || (function () {
             var d = e.data || {};
             if (d.type === 'pl-lentes-cfg-live' && d.config) {
                 window.__PL_LENTES_CFG_OVERRIDE = d.config; atual = d.config;
+                try { if (Array.isArray(window.LENTES) && Array.isArray(d.config.lentes_extra)) catalogo(window.LENTES, { lentes: [], lentes_extra: d.config.lentes_extra }); } catch (x) {}   // lente nova aparece na prévia antes de salvar
                 try { api.reaplica(d.config); } catch (x) {}
                 try { if (api.atualizaTela) api.atualizaTela(); } catch (x) {}
                 marcaEditaveis();
