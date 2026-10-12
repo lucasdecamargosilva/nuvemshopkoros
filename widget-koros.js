@@ -3119,6 +3119,24 @@ var PLLC = window.PLLC || (function () {
             if (!v) return;
             try { [].forEach.call(document.querySelectorAll(t.sel), function (el) { el.innerHTML = fmt(v); }); } catch (e) {}
         });
+        try { opcoesTela(cfg); } catch (e) {}
+    }
+    function opcoesTela(cfg) {   // opções das telas (ex.: receita) desligadas/reordenadas no painel: cfg.opcoes_ocultas / cfg.opcoes_ordem = { etapa: [chaves] } — 13/10/2026
+        var oc = cfg.opcoes_ocultas || {}, od = cfg.opcoes_ordem || {}, css = '';
+        var alvo = function (et, k) {
+            var t = (cfg.textos || []).filter(function (x) { return x && x.etapa === et && (x.key === et + '.' + k + '.titulo' || x.key === et + '.' + k + '.desc'); })[0];
+            if (!t || !t.sel) return null; var s = String(t.sel), i = s.lastIndexOf(' '); return i > 0 ? s.slice(0, i) : null;
+        };
+        Object.keys(oc).forEach(function (et) { (Array.isArray(oc[et]) ? oc[et] : []).forEach(function (k) { var s = alvo(et, k); if (s) css += s + '{display:none!important}'; }); });
+        var st = document.getElementById('pllc-op-css') || document.createElement('style');
+        st.id = 'pllc-op-css'; st.textContent = css; (document.head || document.documentElement).appendChild(st);
+        Object.keys(od).forEach(function (et) {
+            var els = (Array.isArray(od[et]) ? od[et] : []).map(function (k) { var s = alvo(et, k); try { return s && document.querySelector(s); } catch (e) { return null; } }).filter(Boolean);
+            if (els.length < 2) return;
+            var pai = els[0].parentNode; if (!els.every(function (x) { return x.parentNode === pai; })) return;
+            var irm = [].slice.call(pai.children).filter(function (x) { return els.indexOf(x) !== -1; }), ref = irm[irm.length - 1].nextSibling;
+            els.forEach(function (x) { pai.insertBefore(x, ref); });
+        });
     }
     /* ---- Etapas criadas pelo lojista (cfg.etapas_extra, 13/10/2026) ----
        { id, nome, titulo, dica, tipo: 'escolha'|'multipla'|'texto', opcoes:[{key,titulo,desc}], obrigatoria, antes_de: 'tipo'|'tratamento'|'receita'|'resultado', ativo }
@@ -3289,7 +3307,7 @@ var PLLC = window.PLLC || (function () {
     }
     /* Tratamentos (13/10/2026): o lojista cria tratamentos (cfg.tratamentos_extra: {key, titulo, desc, base, ativo}) — cópia do botão
        do tratamento-base, que segue as regras dele — e remove tratamentos (cfg.tratamentos_ocultos: [keys]). */
-    function botoesExtra(raiz, attr, lista, ocultos, selT, selS) {
+    function botoesExtra(raiz, attr, lista, ocultos, selT, selS, ordem) {
         var r = typeof raiz === 'string' ? document.querySelector(raiz) : raiz; if (!r) return;
         lista = Array.isArray(lista) ? lista : []; ocultos = Array.isArray(ocultos) ? ocultos : [];
         var keys = lista.map(function (o) { return String(o && o.key); });
@@ -3311,6 +3329,16 @@ var PLLC = window.PLLC || (function () {
         ocultos.forEach(function (k) { css += '[' + attr + '="' + k + '"]:not([data-pl-copia]){display:none!important}'; });
         var st = document.getElementById('pllc-trat-css') || document.createElement('style');
         st.id = 'pllc-trat-css'; st.textContent = css; (document.head || document.documentElement).appendChild(st);
+        // ordem escolhida no painel (cfg.tratamentos_ordem: chaves dos tratamentos e dos criados) — 13/10/2026
+        if (Array.isArray(ordem) && ordem.length) {
+            var bs = [].slice.call(r.querySelectorAll('[' + attr + ']')), pai = bs[0] && bs[0].parentNode;
+            if (pai && bs.every(function (x) { return x.parentNode === pai; })) {
+                var chave = function (x) { return x.getAttribute('data-pl-copia') ? x.getAttribute('data-pl-op') : x.getAttribute(attr); };
+                var pos = function (x) { var i = ordem.indexOf(chave(x)); return i === -1 ? 999 + bs.indexOf(x) : i; };
+                var ref = bs[bs.length - 1].nextSibling;
+                bs.slice().sort(function (a, b) { return pos(a) - pos(b); }).forEach(function (x) { pai.insertBefore(x, ref); });
+            }
+        }
     }
     function cor(v) { return /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(String(v || '').trim()) ? String(v).trim() : null; }
     // Cores: modelo(t) devolve o CSS da loja com as cores já resolvidas.
@@ -4226,7 +4254,7 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             if (!cfg) return;
             PLLC.opcoes('#q-step-lentes', 'data-visao', cfg.necessidades, '.q-opt-t', '.q-opt-s');
             PLLC.textos(cfg);   // textos das telas editados no painel
-            PLLC.botoesExtra('#q-step-receita', 'data-trat', cfg.tratamentos_extra, cfg.tratamentos_ocultos, '.q-opt-t', '.q-opt-s');   // tratamentos criados/removidos
+            PLLC.botoesExtra('#q-step-receita', 'data-trat', cfg.tratamentos_extra, cfg.tratamentos_ocultos, '.q-opt-t', '.q-opt-s', cfg.tratamentos_ordem);   // tratamentos criados/removidos
             PLLC.arrastavel('#q-step-lentes', 'data-visao');
             PLLC.temaCompleto(cfg, PL_MAPA_TEMA);   // uma cor por elemento, cantos e fonte
             PLLC.tema(cfg, function (t) {
