@@ -3070,10 +3070,140 @@ var PLLC = window.PLLC || (function () {
         return promessa;
     }
     // Etapas editáveis pelo painel (com os padrões de hoje quando a loja não mexeu)
+    /* Regras por opção (19/10/2026) — cfg.op_regras = { tipo: {chave: {acao, aviso_titulo, aviso_texto, produtos}}, tratamento: {...} }.
+       acao: 'pular_tratamento' (só tipo: vai direto à receita com o tratamento padrão), 'so_armacao', 'aviso' (aviso + WhatsApp).
+       produtos: palavras do nome do produto (vírgula); a opção só aparece se o nome tiver alguma delas. */
+    var _tipoEscolhido = null, _rotasApi = null;
+    function regraDe(et, k) { var c = atual || window.__PL_LENTES_CFG_OVERRIDE || {}; return ((c.op_regras || {})[et] || {})[k] || null; }
+    function nomeProduto() {
+        var m = document.querySelector('meta[property="og:title"]');
+        return String((m && m.content) || (document.querySelector('h1') || {}).textContent || document.title || '').toLowerCase();
+    }
+    function produtoCasa(lista) {
+        var ws = String(lista || '').toLowerCase().split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+        if (!ws.length) return true;
+        var n = nomeProduto(); return ws.some(function (w) { return n.indexOf(w) !== -1; });
+    }
+    // esconde as opções que não valem para este produto
+    function regras(cfg, sel) {
+        var R = (cfg && cfg.op_regras) || {}, css = '';
+        ['tipo', 'tratamento'].forEach(function (et) {
+            var m = R[et] || {}, s = sel && sel[et]; if (!s) return;
+            Object.keys(m).forEach(function (k) {
+                if (m[k] && m[k].produtos && !produtoCasa(m[k].produtos))
+                    css += s.raiz + ' [data-pl-op="' + k + '"],' + s.raiz + ' [' + s.attr + '="' + k + '"]:not([data-pl-copia]){display:none!important}';
+            });
+        });
+        var st = document.getElementById('pllc-regra-css') || document.createElement('style');
+        st.id = 'pllc-regra-css'; st.textContent = css; (document.head || document.documentElement).appendChild(st);
+    }
+    function avisoRota(r, titulo) {
+        var api = _rotasApi || {}, velho = document.getElementById('pllc-aviso'); if (velho) velho.parentNode.removeChild(velho);
+        var c = atual || window.__PL_LENTES_CFG_OVERRIDE || {}, tm = c.tema || {}, cor = tm.botao || tm.destaque || '#1d1530', corTx = tm.botao_texto || '#fff';
+        var num = String(api.whatsapp || '').replace(/\D/g, '');
+        var msg = 'Olá! Estou vendo ' + (document.title || 'um óculos') + ' e escolhi "' + titulo + '". Pode me ajudar com a lente?';
+        var el = document.createElement('div'); el.id = 'pllc-aviso';
+        el.setAttribute('style', 'position:fixed;inset:0;z-index:2147483647;background:rgba(20,16,30,.55);display:flex;align-items:center;justify-content:center;padding:16px;font-family:inherit');
+        el.innerHTML = '<div style="background:#fff;color:#1d1530;max-width:420px;width:100%;border-radius:16px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3);display:grid;gap:12px">' +
+            '<b style="font-size:18px;line-height:1.3">' + fmt(r.aviso_titulo || 'Vamos montar essa lente com você') + '</b>' +
+            '<div style="font-size:14px;line-height:1.5;color:#4b4560">' + fmt(r.aviso_texto || 'Fale com a nossa equipe no WhatsApp que a gente monta essa lente com você.') + '</div>' +
+            (num ? '<a href="https://wa.me/' + num + '?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener" data-pllc-aviso="wa" style="display:block;text-align:center;padding:13px;border-radius:10px;background:' + cor + ';color:' + corTx + ';font-weight:700;text-decoration:none">Falar no WhatsApp</a>' : '') +
+            '<button type="button" data-pllc-aviso="voltar" style="padding:11px;border-radius:10px;border:1px solid #ddd;background:#fff;font:inherit;cursor:pointer">Voltar</button></div>';
+        el.addEventListener('click', function (e) { var b = e.target.closest('[data-pllc-aviso]'); if ((b && b.getAttribute('data-pllc-aviso') === 'voltar') || e.target === el) el.parentNode.removeChild(el); if (b && b.getAttribute('data-pllc-aviso') === 'wa' && api.track) api.track('aviso_whatsapp', { opcao: titulo }); });
+        document.body.appendChild(el);
+    }
+    // clique numa opção com rota: roda antes do widget (fase de captura)
+    function rotas(api) {
+        if (_rotasApi) { _rotasApi = api; return; }
+        _rotasApi = api;
+        document.addEventListener('click', function (e) {
+            var a = _rotasApi, t = e.target.closest && e.target.closest('[' + a.attrTipo + '],[' + a.attrTrat + ']'); if (!t) return;
+            var et = t.hasAttribute(a.attrTipo) ? 'tipo' : 'tratamento';
+            var k = t.getAttribute('data-pl-op') || t.getAttribute(et === 'tipo' ? a.attrTipo : a.attrTrat);
+            if (et === 'tipo') _tipoEscolhido = k;
+            var r = regraDe(et, k); if (!r || !r.acao) return;
+            var titulo = String((t.querySelector(a.selTitulo || 'b') || t).textContent || '').trim();
+            if (r.acao === 'so_armacao' && a.soArmacao) { e.preventDefault(); e.stopImmediatePropagation(); if (a.track) a.track('rota_so_armacao', { opcao: k }); a.soArmacao(); }
+            else if (r.acao === 'aviso') { e.preventDefault(); e.stopImmediatePropagation(); if (a.track) a.track('rota_aviso', { opcao: k }); avisoRota(r, titulo); }
+        }, true);
+    }
+    /* Regras da receita (19/10/2026) — cfg.receita_regras = { esf_min, esf_max, cil_max, add_max, exigir_dnp, aviso_titulo, aviso_texto }.
+       Limites por tipo de lente em cfg.op_regras.tipo[chave].{esf_min, esf_max, cil_max} (vencem os gerais). Grau fora: aviso + WhatsApp.
+       Cilíndrico positivo é transposto antes de comparar (os limites são em cilíndrico negativo). */
+    var _rxApi = null, _dnp = null;
+    function numero(v) { if (v === '' || v == null) return null; var n = Number(String(v).replace(',', '.')); return isFinite(n) ? n : null; }
+    function rxRegras() { var c = atual || window.__PL_LENTES_CFG_OVERRIDE || {}; return c.receita_regras || {}; }
+    function foraDoLimite(r) {
+        var g = rxRegras(), t = (_tipoEscolhido && regraDe('tipo', _tipoEscolhido)) || {};
+        var lim = function (k) { var v = numero(t[k]); return v != null ? v : numero(g[k]); };
+        var emin = lim('esf_min'), emax = lim('esf_max'), cmax = lim('cil_max'), amax = numero(g.add_max);
+        var olhos = [[r.odEsf, r.odCil], [r.oeEsf, r.oeCil]].filter(function (o) { return o[0] != null; }).map(function (o) {
+            var e = Number(o[0]), cl = Number(o[1]) || 0; return cl > 0 ? [e + cl, -cl] : [e, cl];
+        });
+        for (var i = 0; i < olhos.length; i++) {
+            if (emin != null && olhos[i][0] < emin) return 'esferico';
+            if (emax != null && olhos[i][0] > emax) return 'esferico';
+            if (cmax != null && Math.abs(olhos[i][1]) > Math.abs(cmax)) return 'cilindrico';
+        }
+        if (amax != null && r.adicao != null && Number(r.adicao) > amax) return 'adicao';
+        return null;
+    }
+    function lerRx(form) {
+        var g = function (k) { var el = form.querySelector('[data-r="' + k + '"]'); return el && el.value !== '' ? Number(el.value) : null; };
+        return { odEsf: g('odEsf'), odCil: g('odCil'), oeEsf: g('oeEsf'), oeCil: g('oeCil'), adicao: g('adicao') };
+    }
+    function opsDnp() { var h = '<option value="">—</option>'; for (var v = 25; v <= 40.001; v += 0.5) h += '<option value="' + v.toFixed(1) + '">' + v.toFixed(1).replace('.', ',') + '</option>'; return h; }
+    function montaDnp() {
+        var a = _rxApi; if (!a) return;
+        var form = document.querySelector(a.form), btn = form && form.querySelector(a.btn), velho = document.getElementById('pllc-dnp');
+        if (!rxRegras().exigir_dnp) { if (velho) velho.parentNode.removeChild(velho); return; }
+        if (velho || !btn) return;
+        var el = document.createElement('div'); el.id = 'pllc-dnp';
+        if (a.kit === 'plc') {
+            el.innerHTML = '<div class="plc-note" style="margin:6px 0">DNP: a distância de cada pupila até o meio do nariz, em mm (vem na receita ou a ótica mede).</div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="plc-field"><label>DNP olho direito</label><select data-pllc-dnp="od">' + opsDnp() + '</select></div>' +
+                '<div class="plc-field"><label>DNP olho esquerdo</label><select data-pllc-dnp="oe">' + opsDnp() + '</select></div></div>';
+        } else {
+            el.className = 'q-olho';
+            el.innerHTML = '<span class="q-olho-tag">DNP &mdash; pupila at&eacute; o meio do nariz (mm)</span>' +
+                '<div class="q-olho-campos" style="grid-template-columns:1fr 1fr;"><label>Olho direito<select data-pllc-dnp="od">' + opsDnp() + '</select></label>' +
+                '<label>Olho esquerdo<select data-pllc-dnp="oe">' + opsDnp() + '</select></label></div>';
+        }
+        var antes = (a.antes && form.querySelector(a.antes)) || btn;
+        antes.parentNode.insertBefore(el, antes);
+    }
+    function erroRx(msg) {
+        var a = _rxApi, el = a && a.erro && document.querySelector(a.erro); if (!el) return;
+        el.textContent = msg; el.hidden = false; el.style.display = 'block';
+        try { el.scrollIntoView({ block: 'nearest' }); } catch (e) {}
+    }
+    // api: { form, btn, antes, erro, kit: 'q'|'plc', track }
+    function receita(api) {
+        var ja = !!_rxApi; _rxApi = api; montaDnp(); if (ja) return;
+        document.addEventListener('click', function (e) {
+            var a = _rxApi, b = e.target.closest && e.target.closest(a.form + ' ' + a.btn); if (!b) return;
+            var form = document.querySelector(a.form), g = rxRegras(), r = lerRx(form);
+            if (r.odEsf == null || r.oeEsf == null) return;   // falta o esférico: o widget avisa
+            if (g.exigir_dnp) {
+                var od = (form.querySelector('[data-pllc-dnp="od"]') || {}).value, oe = (form.querySelector('[data-pllc-dnp="oe"]') || {}).value;
+                if (!od || !oe) { e.preventDefault(); e.stopImmediatePropagation(); erroRx('Preencha a DNP dos dois olhos. Ela vem na receita; se não tiver, a ótica mede para você.'); return; }
+                _dnp = { od: Number(od), oe: Number(oe) };
+                if (a.track) a.track('dnp', _dnp);
+            }
+            var f = foraDoLimite(r);
+            if (f) {
+                e.preventDefault(); e.stopImmediatePropagation();
+                if (a.track) a.track('receita_fora_limite', { motivo: f, tipo: _tipoEscolhido, grau: r });
+                avisoRota({ aviso_titulo: g.aviso_titulo || 'Sua receita pede uma lente sob medida', aviso_texto: g.aviso_texto || 'Esse grau precisa de uma lente especial. Fale com a nossa equipe no WhatsApp que a gente monta a lente certa para você.' }, 'lente para a minha receita');
+            }
+        }, true);
+    }
+    function dnp() { return _dnp; }
     function etapas() {
         var e = { telefone: { ativo: true }, tratamento: { ativo: true, padrao: '' }, receita: { posicao: 'final' } };
         var s = (atual && atual.etapas) || {};
         Object.keys(e).forEach(function (k) { if (s[k] && typeof s[k] === 'object') for (var x in s[k]) e[k][x] = s[k][x]; });
+        var rt = _tipoEscolhido && regraDe('tipo', _tipoEscolhido); if (rt && rt.acao === 'pular_tratamento') e.tratamento.ativo = false;   // rota da opção (19/10)
         return e;
     }
     function fmt(t) {
@@ -3162,7 +3292,8 @@ var PLLC = window.PLLC || (function () {
         var c = atual || window.__PL_LENTES_CFG_OVERRIDE;
         return (c && Array.isArray(c.etapas_extra) ? c.etapas_extra : []).filter(function (x) {
             return x && x.id && x.ativo !== false && String(x.titulo || '').trim() &&
-                (x.tipo === 'texto' || (Array.isArray(x.opcoes) && x.opcoes.some(function (o) { return o && String(o.titulo || '').trim(); })));
+                (x.tipo === 'texto' || (Array.isArray(x.opcoes) && x.opcoes.some(function (o) { return o && String(o.titulo || '').trim(); }))) &&
+                produtoCasa(x.produtos) && (!x.so_tipo || x.so_tipo === _tipoEscolhido);   // etapa só em alguns produtos / num caminho (19/10)
         });
     }
     function pendente(antes) {
@@ -3206,7 +3337,9 @@ var PLLC = window.PLLC || (function () {
             b.addEventListener('click', function (e) {
                 e.preventDefault(); e.stopPropagation();
                 var o = x.opcoes[+b.getAttribute('data-pllc-x-op')], nome = String(o.titulo).trim();
-                if (!multi) { fim(nome); return; }
+                if (o.acao === 'aviso') { if (_rotasApi && _rotasApi.track) _rotasApi.track('rota_aviso', { etapa: x.nome || x.titulo, opcao: nome }); avisoRota(o, nome); return; }   // rota da opção (19/10)
+                    if (o.acao === 'so_armacao' && _rotasApi && _rotasApi.soArmacao) { respondidas[x.id] = nome; _rotasApi.soArmacao(); return; }
+                    if (!multi) { fim(nome); return; }
                 if (marcadas[nome]) delete marcadas[nome]; else marcadas[nome] = 1;
                 b.setAttribute('aria-pressed', marcadas[nome] ? 'true' : 'false');
                 erro.style.display = 'none';
@@ -3454,7 +3587,7 @@ var PLLC = window.PLLC || (function () {
         w.__pllc = true;
         return w;
     }
-    return { carregar: carregar, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas, temaCompleto: temaCompleto, arrastavel: arrastavel, textos: textos, extras: extras, pendente: pendente, limpaRespostas: limpaRespostas, respostas: respostas, telaExtra: telaExtra, seqComExtras: seqComExtras, previa: previa, cfgAtual: cfgAtual, botoesExtra: botoesExtra };
+    return { carregar: carregar, regras: regras, rotas: rotas, receita: receita, dnp: dnp, catalogo: catalogo, opcoes: opcoes, tema: tema, embrulha: embrulha, fmt: fmt, dominio: dominio, etapas: etapas, temaCompleto: temaCompleto, arrastavel: arrastavel, textos: textos, extras: extras, pendente: pendente, limpaRespostas: limpaRespostas, respostas: respostas, telaExtra: telaExtra, seqComExtras: seqComExtras, previa: previa, cfgAtual: cfgAtual, botoesExtra: botoesExtra };
 })();
 window.PLLC = PLLC;
 
@@ -4275,6 +4408,8 @@ if (typeof module !== 'undefined') { module.exports = { LENTES, recomendar, grau
             PLLC.opcoes('#q-step-lentes', 'data-visao', cfg.necessidades, '.q-opt-t', '.q-opt-s');
             PLLC.textos(cfg);   // textos das telas editados no painel
             PLLC.botoesExtra('#q-step-receita', 'data-trat', cfg.tratamentos_extra, cfg.tratamentos_ocultos, '.q-opt-t', '.q-opt-s', cfg.tratamentos_ordem);   // tratamentos criados/removidos
+            PLLC.regras(cfg, { tipo: { raiz: '#q-step-lentes', attr: 'data-visao' }, tratamento: { raiz: '#q-step-receita', attr: 'data-trat' } });   // rota e produtos por opção (19/10)
+            PLLC.rotas({ attrTipo: 'data-visao', attrTrat: 'data-trat', selTitulo: '.q-opt-t', whatsapp: WHATSAPP_LOJA, track: track, soArmacao: function () { marcarCliqueCarrinho(false); comprarArmacao(); } }); PLLC.receita({ form: '#q-form-receita', btn: '#q-ver-lente', antes: '#q-aviso-campo', erro: '#q-aviso-campo', kit: 'q', track: track });   // regras da receita + DNP (19/10)
             PLLC.arrastavel('#q-step-lentes', 'data-visao');
             PLLC.temaCompleto(cfg, PL_MAPA_TEMA);   // uma cor por elemento, cantos e fonte
             PLLC.tema(cfg, function (t) {
