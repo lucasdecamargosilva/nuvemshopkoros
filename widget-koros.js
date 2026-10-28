@@ -1343,8 +1343,12 @@ setInterval(function(){var el=document.getElementById('q-step-error');if(!el)ret
             } catch (_) {}
             return false;
         })()) {
-            console.log('[PL] Página de lente — provador não aparece aqui.');
-            return;
+            // Só o PROVADOR some (selo #q-open-ia e botão inline). O resto do init segue: o "Escolher lentes e comprar"
+            // depende do modal criado aqui embaixo e tem que continuar na página da lente (Lucas, 28/10/2026).
+            console.log('[PL] Página de lente — selo e botão do provador escondidos; "Escolher lentes" continua.');
+            var _plLenteCss = document.createElement('style');
+            _plLenteCss.textContent = '#q-open-ia,.q-btn-trigger-ia,.q-btn-inline-provador{display:none!important}';
+            document.head.appendChild(_plLenteCss);
         }
 
         // Fontes (async, não bloqueia render)
